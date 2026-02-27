@@ -169,13 +169,13 @@ export default function ExamAttemptPage() {
 
       // Warning at 5 minutes
       if (timeLeftRef.current === 300) {
-        setWarningMessage('⚠️ Warning: 5 minutes remaining!');
+        setWarningMessage('Warning: 5 minutes remaining!');
         setTimeout(() => setWarningMessage(''), 5000);
       }
 
       // Warning at 1 minute
       if (timeLeftRef.current === 60) {
-        setWarningMessage('⚠️ Warning: 1 minute remaining! Your exam will auto-submit.');
+        setWarningMessage('Warning: 1 minute remaining! Your exam will auto-submit.');
         setTimeout(() => setWarningMessage(''), 5000);
       }
     }, 1000);
@@ -449,7 +449,7 @@ export default function ExamAttemptPage() {
       }
     } catch (err) {
       console.error('Submit error:', err);
-      setWarningMessage('❌ Failed to submit. Please try again.');
+      setWarningMessage('Failed to submit. Please try again.');
       setTimeout(() => setWarningMessage(''), 5000);
     }
   };
@@ -526,7 +526,7 @@ export default function ExamAttemptPage() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
-          <div className="text-red-500 text-6xl mb-4">⚠</div>
+          <div className="text-red-500 text-6xl mb-4"></div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Session Error</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
@@ -545,7 +545,7 @@ export default function ExamAttemptPage() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
+          <div className="text-green-500 text-6xl mb-4"></div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Exam Submitted</h2>
           <p className="text-gray-600 mb-2">Your exam has been submitted successfully.</p>
           <p className="text-sm text-gray-500 mb-4">
@@ -622,7 +622,7 @@ export default function ExamAttemptPage() {
             {saving ? (
               <span className="text-xs text-blue-200">Saving...</span>
             ) : lastSaved ? (
-              <span className="text-xs text-green-300">✓ Saved</span>
+              <span className="text-xs text-green-300">Saved</span>
             ) : null}
           </div>
         </div>

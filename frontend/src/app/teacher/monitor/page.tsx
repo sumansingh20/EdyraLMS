@@ -201,29 +201,29 @@ export default function TeacherMonitorPage() {
       {/* Stats Row */}
       <div className="lms-stats-row monitor-stats">
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-          <div className="lms-stat-icon">📊</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{sessions.length}</div>
           <div className="lms-stat-label">Total Sessions</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-active animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
-          <div className="lms-stat-icon pulse-icon">🟢</div>
+          <div className="lms-stat-icon pulse-icon"></div>
           <div className="lms-stat-value text-green-700">{totalActive}</div>
           <div className="lms-stat-label">Active</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-idle animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="lms-stat-icon">🟡</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value text-yellow-600">{totalIdle}</div>
           <div className="lms-stat-label">Idle</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-violation animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
-          <div className="lms-stat-icon">⚠️</div>
+          <div className="lms-stat-icon"></div>
           <div className={`lms-stat-value ${totalSuspicious > 0 ? 'text-red-700 shake-value' : ''}`}>
             {totalSuspicious}
           </div>
           <div className="lms-stat-label">With Violations</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-total-violations animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-          <div className="lms-stat-icon">🚨</div>
+          <div className="lms-stat-icon"></div>
           <div className={`lms-stat-value ${totalViolations > 0 ? 'text-red-700' : ''}`}>
             {totalViolations}
           </div>
@@ -236,7 +236,7 @@ export default function TeacherMonitorPage() {
         <div className="lms-alert lms-alert-warning live-exam-alert animate-pulse-border">
           <div className="live-indicator"></div>
           <div>
-            <div className="lms-alert-title">🔴 LIVE EXAMINATION IN PROGRESS</div>
+            <div className="lms-alert-title">LIVE EXAMINATION IN PROGRESS</div>
             <div>{activeExams.length} examination(s) currently active with {sessions.length} student(s) online.</div>
           </div>
         </div>
@@ -245,11 +245,11 @@ export default function TeacherMonitorPage() {
       {/* Active Examinations */}
       <div className="lms-section animate-fadeIn" style={{ animationDelay: '0.2s' }}>
         <div className="lms-section-title">
-          <span className="section-icon">📋</span> Active Examinations
+          <span className="section-icon"></span> Active Examinations
         </div>
         {activeExams.length === 0 ? (
           <div className="lms-table-empty empty-state-animated">
-            <div className="empty-icon">📭</div>
+            <div className="empty-icon"></div>
             <div>No examinations are currently active.</div>
           </div>
         ) : (
@@ -295,7 +295,7 @@ export default function TeacherMonitorPage() {
       <div className="lms-section animate-fadeIn" style={{ animationDelay: '0.3s' }}>
         <div className="flex justify-between items-center mb-2">
           <div className="lms-section-title mb-0">
-            <span className="section-icon">👥</span> Live Sessions
+            <span className="section-icon"></span> Live Sessions
             {selectedExam !== 'all' && <span className="font-normal text-xs ml-2 filter-badge">(Filtered)</span>}
           </div>
           <div className="lms-form-group m-0">
@@ -322,7 +322,7 @@ export default function TeacherMonitorPage() {
           </div>
         ) : sessions.length === 0 ? (
           <div className="lms-table-empty empty-state-animated">
-            <div className="empty-icon">👤</div>
+            <div className="empty-icon"></div>
             <div>No active sessions found.</div>
           </div>
         ) : (
@@ -398,7 +398,7 @@ export default function TeacherMonitorPage() {
       {/* Guidelines */}
       <div className="lms-info-box guidelines-box animate-fadeIn" style={{ animationDelay: '0.4s' }}>
         <div className="lms-info-box-header">
-          <span className="section-icon">📖</span> Live Monitor Guidelines
+          <span className="section-icon"></span> Live Monitor Guidelines
         </div>
         <div className="lms-info-box-body text-xs">
           <ul className="guidelines-list">

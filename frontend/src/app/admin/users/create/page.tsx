@@ -289,9 +289,9 @@ export default function CreateUserPage() {
   };
 
   const getRoleIcon = (role: string) => {
-    if (role === 'admin') return '🛡️';
-    if (role === 'teacher') return '👨‍🏫';
-    return '🎓';
+    if (role === 'admin') return '[Admin]';
+    if (role === 'teacher') return '[Teacher]';
+    return '[Student]';
   };
 
   // Success screen
@@ -300,7 +300,7 @@ export default function CreateUserPage() {
       <LMSLayout pageTitle="User Created" breadcrumbs={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Users', href: '/admin/users' }, { label: 'Created' }]}>
         <div className="animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '40px 20px' }}>
           <div className="animate-scale-in" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #059669, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '36px', color: '#fff' }}>
-            ✓
+
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a2e', marginBottom: '8px' }}>User Created Successfully!</h2>
           <p style={{ color: '#666', marginBottom: '32px' }}>
@@ -383,7 +383,7 @@ export default function CreateUserPage() {
             gap: '8px',
           }}
         >
-          <span style={{ fontSize: '18px' }}>👤</span> Single User
+          Single User
         </button>
         <button
           onClick={() => setActiveTab('bulk')}
@@ -402,7 +402,7 @@ export default function CreateUserPage() {
             gap: '8px',
           }}
         >
-          <span style={{ fontSize: '18px' }}>📋</span> Bulk Import
+          Bulk Import
         </button>
       </div>
 
@@ -443,7 +443,7 @@ export default function CreateUserPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  {step > s.num ? '✓' : s.num}
+                  {step > s.num ? '--' : s.num}
                 </button>
                 <span style={{ fontSize: '13px', fontWeight: step === s.num ? 600 : 400, color: step === s.num ? '#1a1a2e' : '#999', transition: 'all 0.3s' }}>
                   {s.label}
@@ -540,7 +540,7 @@ export default function CreateUserPage() {
             <div className="animate-fade-in-up">
               {formData.role === 'student' ? (
                 <div className="lms-section">
-                  <div className="lms-section-title">🎓 Student Details</div>
+                  <div className="lms-section-title">Student Details</div>
                   <div className="lms-alert lms-alert-info" style={{ margin: '12px 16px' }}>
                     Student password will be set to their Date of Birth in <strong>DDMMYYYY</strong> format. Students log in using their Student ID + DOB.
                   </div>
@@ -649,7 +649,7 @@ export default function CreateUserPage() {
                       <span className="animate-pulse">●</span> Creating...
                     </span>
                   ) : (
-                    'Create User ✓'
+                    'Create User'
                   )}
                 </button>
               </div>
@@ -662,7 +662,7 @@ export default function CreateUserPage() {
       {activeTab === 'bulk' && (
         <div className="animate-fade-in-up">
           <div className="lms-section" style={{ marginBottom: '20px' }}>
-            <div className="lms-section-title">📋 CSV Bulk Import</div>
+            <div className="lms-section-title">CSV Bulk Import</div>
             <div style={{ padding: '16px' }}>
               <div className="lms-alert lms-alert-info" style={{ marginBottom: '20px' }}>
                 <strong>Required columns:</strong> firstName, lastName, email<br />
@@ -671,7 +671,7 @@ export default function CreateUserPage() {
               </div>
 
               <button onClick={downloadTemplate} className="lms-btn lms-btn-sm" style={{ marginBottom: '20px' }}>
-                ⬇ Download CSV Template
+                Download CSV Template
               </button>
 
               {/* Drag & Drop Zone */}
@@ -692,7 +692,7 @@ export default function CreateUserPage() {
                 onClick={() => document.getElementById('csv-input')?.click()}
               >
                 <input id="csv-input" type="file" accept=".csv" onChange={handleFileChange} style={{ display: 'none' }} />
-                <div style={{ fontSize: '40px', marginBottom: '12px' }}>{dragActive ? '📂' : '📄'}</div>
+                <div style={{ fontSize: '40px', marginBottom: '12px' }}>{dragActive ? '' : ''}</div>
                 <div style={{ fontWeight: 600, color: '#333', marginBottom: '4px' }}>
                   {csvFile ? csvFile.name : 'Drop CSV file here or click to browse'}
                 </div>

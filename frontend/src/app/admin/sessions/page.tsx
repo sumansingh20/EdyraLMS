@@ -102,11 +102,11 @@ export default function SessionInspectorPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return '🟢';
-      case 'submitted': return '✅';
-      case 'force_submitted': return '⚡';
+      case 'active': return '';
+      case 'submitted': return '';
+      case 'force_submitted': return '';
       case 'expired': return '';
-      case 'violation_terminated': return '🚫';
+      case 'violation_terminated': return '';
       default: return '';
     }
   };
@@ -191,7 +191,7 @@ export default function SessionInspectorPage() {
       {/* Stats Cards */}
       <div className="lms-stats-row monitor-stats">
         <div className="lms-stat stat-card-monitor stat-active animate-fadeInUp" style={{ animationDelay: '0.1s', position: 'relative' }}>
-          <div className="lms-stat-icon">🟢</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{activeSessions.length}</div>
           <div className="lms-stat-label">Active Sessions</div>
           {activeSessions.length > 0 && <div className="live-indicator" style={{ position: 'absolute', top: '10px', right: '10px' }}></div>}
@@ -202,7 +202,7 @@ export default function SessionInspectorPage() {
           <div className="lms-stat-label">Submitted</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-violation animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="lms-stat-icon">⚠️</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{violationSessions.length}</div>
           <div className="lms-stat-label">With Violations</div>
         </div>
@@ -218,7 +218,7 @@ export default function SessionInspectorPage() {
         <div className="live-exam-alert animate-pulse-border animate-fadeIn" style={{ animationDelay: '0.3s' }}>
           <div className="flex items-center gap-3">
             <span className="live-indicator"></span>
-            <span className="font-semibold">⚠️ {activeSessions.length} Active Session(s)</span>
+            <span className="font-semibold">{activeSessions.length} Active Session(s)</span>
           </div>
           <span className="text-sm">Students are currently taking exams. All actions are logged.</span>
         </div>
@@ -237,7 +237,7 @@ export default function SessionInspectorPage() {
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             >
               <option value="all">All Sessions</option>
-              <option value="active">🟢 Active Only</option>
+              <option value="active">Active Only</option>
               <option value="submitted">Submitted</option>
               <option value="force_submitted">Force Submitted</option>
               <option value="expired">Expired</option>
@@ -367,14 +367,14 @@ export default function SessionInspectorPage() {
                 <table className="lms-table">
                   <tbody>
                     <tr><td className="text-muted" style={{ width: '150px' }}>Student</td><td><strong>{selectedSession.student.firstName} {selectedSession.student.lastName}</strong></td></tr>
-                    <tr><td className="text-muted">🆔 Student ID</td><td>{selectedSession.student.studentId}</td></tr>
+                    <tr><td className="text-muted">Student ID</td><td>{selectedSession.student.studentId}</td></tr>
                     <tr><td className="text-muted">Email</td><td>{selectedSession.student.email}</td></tr>
                     <tr><td className="text-muted">Exam</td><td>{selectedSession.exam.title}</td></tr>
                     <tr><td className="text-muted">Batch</td><td>Batch {selectedSession.batch}</td></tr>
                     <tr><td className="text-muted">Started At</td><td>{format(new Date(selectedSession.startedAt), 'dd/MM/yyyy HH:mm:ss')}</td></tr>
                     <tr><td className="text-muted">Server End</td><td>{format(new Date(selectedSession.serverEndTime), 'dd/MM/yyyy HH:mm:ss')}</td></tr>
                     <tr><td className="text-muted">Remaining</td><td className="font-mono">{getRemainingTime(selectedSession)}</td></tr>
-                    <tr><td className="text-muted">⚠️ Violations</td><td className={selectedSession.violationCount >= selectedSession.maxViolationsAllowed - 1 ? 'text-red-600 font-bold' : ''}>{selectedSession.violationCount} / {selectedSession.maxViolationsAllowed}</td></tr>
+                    <tr><td className="text-muted">Violations</td><td className={selectedSession.violationCount >= selectedSession.maxViolationsAllowed - 1 ? 'text-red-600 font-bold' : ''}>{selectedSession.violationCount} / {selectedSession.maxViolationsAllowed}</td></tr>
                     <tr><td className="text-muted">IP Address</td><td className="font-mono">{selectedSession.ipAddress}</td></tr>
                     <tr><td className="text-muted">Auto-saves</td><td>{selectedSession.autoSaveCount}</td></tr>
                   </tbody>
@@ -384,14 +384,14 @@ export default function SessionInspectorPage() {
               {selectedSession.status === 'active' && (
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
                   <div className="lms-alert lms-alert-warning" style={{ marginBottom: '12px', padding: '10px', background: '#fef3cd', border: '1px solid #ffc107', borderRadius: '4px' }}>
-                    ⚠️ <strong>Warning:</strong> These actions are irreversible and will be logged.
+                    <strong>Warning:</strong> These actions are irreversible and will be logged.
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="lms-btn" style={{ background: '#f59e0b', color: '#fff' }} onClick={() => forceSubmit(selectedSession._id)} disabled={actionLoading}>
-                      {actionLoading ? '⏳' : '⚡'} Force Submit
+                      Force Submit
                     </button>
                     <button className="lms-btn" style={{ background: '#ef4444', color: '#fff' }} onClick={() => terminateSession(selectedSession._id, 'admin_action')} disabled={actionLoading}>
-                      {actionLoading ? '⏳' : '🚫'} Terminate Session
+                      Terminate Session
                     </button>
                   </div>
                 </div>

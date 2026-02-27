@@ -138,17 +138,17 @@ export default function ResultDetailPage() {
           <div className="lms-stat-label">Attempted</div>
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
-          <div className="lms-stat-icon">✅</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value" style={{ color: 'var(--success)' }}>{result.correctAnswers}</div>
           <div className="lms-stat-label">Correct</div>
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="lms-stat-icon">❌</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value" style={{ color: 'var(--danger)' }}>{result.wrongAnswers}</div>
           <div className="lms-stat-label">Wrong</div>
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
-          <div className="lms-stat-icon">⚠️</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{result.totalViolations}</div>
           <div className="lms-stat-label">Violations</div>
         </div>
@@ -187,12 +187,12 @@ export default function ResultDetailPage() {
                   <tr><td style={{ fontWeight: 'bold' }}>Submitted</td><td className="font-mono">{format(new Date(result.submittedAt), 'dd MMM yyyy HH:mm:ss')}</td></tr>
                   <tr><td style={{ fontWeight: 'bold' }}>Time Taken</td><td>{formatTime(result.timeTaken)}</td></tr>
                   <tr><td style={{ fontWeight: 'bold' }}>Submission Type</td><td>{
-                    result.submissionType === 'auto-timeout' ? '⏰ Auto-submit (timer expired)' :
-                    result.submissionType === 'auto-violation' ? '⚠️ Auto-submit (max violations)' :
-                    result.submissionType === 'admin-force' ? '🔒 Force-submitted by admin' :
-                    result.submissionType === 'auto' ? '⏰ Auto-submit (timer expired)' :
-                    result.submissionType === 'violation' ? '⚠️ Auto-submit (max violations)' :
-                    '✅ Manual submission'
+                    result.submissionType === 'auto-timeout' ? 'Auto-submit (timer expired)' :
+                    result.submissionType === 'auto-violation' ? 'Auto-submit (max violations)' :
+                    result.submissionType === 'admin-force' ? 'Force-submitted by admin' :
+                    result.submissionType === 'auto' ? 'Auto-submit (timer expired)' :
+                    result.submissionType === 'violation' ? 'Auto-submit (max violations)' :
+                    'Manual submission'
                   }</td></tr>
                   <tr><td style={{ fontWeight: 'bold' }}>Violations</td><td>{result.totalViolations}</td></tr>
                 </tbody>
@@ -300,7 +300,7 @@ export default function ResultDetailPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontWeight: 'bold', fontSize: '13px' }}>Q{index + 1}</span>
                       <span className={`lms-badge ${q.isCorrect ? 'lms-badge-success' : isAttempted ? 'lms-badge-danger' : 'lms-badge-warning'}`}>
-                        {q.isCorrect ? '✅ Correct' : isAttempted ? '❌ Wrong' : '⚪ Skipped'}
+                        {q.isCorrect ? 'Correct' : isAttempted ? 'Wrong' : 'Skipped'}
                       </span>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         {q.questionType === 'mcq-single' && 'Single Choice'}
@@ -354,9 +354,9 @@ export default function ResultDetailPage() {
                             </span>
                             <span style={{ flex: 1 }}>{opt.text}</span>
                             <span style={{ fontSize: '14px' }}>
-                              {isSelected && q.isCorrect && '✅'}
-                              {isSelected && !q.isCorrect && '❌'}
-                              {!isSelected && isCorrectOption && '✓'}
+                              {isSelected && q.isCorrect && '(correct)'}
+                              {isSelected && !q.isCorrect && '(wrong)'}
+                              {!isSelected && isCorrectOption && '(correct)'}
                             </span>
                           </div>
                         );
@@ -367,7 +367,7 @@ export default function ResultDetailPage() {
                     {isAttempted && (
                       <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
                         • Your answer is highlighted
-                        {result.showCorrectAnswers && !q.isCorrect && ' • Correct answer shown with ✓'}
+                        {result.showCorrectAnswers && !q.isCorrect && ' • Correct answer shown with (correct)'}
                       </div>
                     )}
 

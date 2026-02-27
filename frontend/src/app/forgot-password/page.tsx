@@ -27,114 +27,87 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Top Bar */}
-      <div className="bg-[#1d4f91] text-white text-xs">
-        <div className="max-w-5xl mx-auto px-4 py-1 flex justify-between">
-          <span>ProctoredExam - Secure Exam Portal</span>
-          <span>You are not logged in. (<Link href="/login" className="hover:underline">Log in</Link>)</span>
-        </div>
-      </div>
-
-      {/* Header */}
-      <header className="bg-white border-b border-gray-300">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#1d4f91] rounded flex items-center justify-center text-white font-bold text-sm">
-              PE
-            </div>
-            <span className="text-lg font-semibold text-gray-900">ProctoredExam</span>
-          </Link>
-          <nav className="text-sm">
-            <Link href="/" className="text-[#0066cc] hover:underline mr-4">Home</Link>
-            <Link href="/login" className="text-[#0066cc] hover:underline">Log in</Link>
-          </nav>
+    <div className="login-page">
+      {/* Institutional Header */}
+      <header className="login-header">
+        <div className="login-header-inner">
+          <div className="login-logo">
+            <span className="login-logo-text">PE</span>
+          </div>
+          <div className="login-institute">
+            <div className="login-institute-name">ProctoredExam</div>
+            <div className="login-institute-sub">Secure Exam Portal</div>
+          </div>
         </div>
       </header>
 
-      {/* Breadcrumb */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 py-2 text-sm text-gray-600">
-          <Link href="/" className="text-[#0066cc] hover:underline">Home</Link>
-          <span className="mx-1">/</span>
-          <span>Forgot password</span>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <main className="flex-1 py-8">
-        <div className="max-w-md mx-auto px-4">
-          <div className="bg-white border border-gray-300 rounded">
-            <div className="bg-gray-50 border-b border-gray-300 px-4 py-3">
-              <h1 className="text-base font-semibold text-gray-800">Forgotten password</h1>
+      <main className="login-main">
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-box-header">
+              <div className="login-box-title">Forgotten Password</div>
+              <div className="login-box-subtitle">
+                {submitted
+                  ? 'Check your email for reset instructions'
+                  : 'Enter your email address to reset your password'}
+              </div>
             </div>
-            
-            <div className="p-4">
+
+            <div className="login-box-body">
               {submitted ? (
                 <div>
-                  <p className="text-sm text-gray-700 mb-4">
-                    If an account exists with the email address you entered, you will receive 
+                  <div className="login-notice">
+                    If an account exists with the email address you entered, you will receive
                     an email with instructions on how to reset your password.
-                  </p>
-                  <p className="text-sm text-gray-700 mb-4">
-                    If you do not receive an email within a few minutes, please check your 
+                  </div>
+                  <div className="login-notice" style={{ marginTop: '12px' }}>
+                    If you do not receive an email within a few minutes, please check your
                     spam folder or try again.
-                  </p>
-                  <Link href="/login" className="text-[#0066cc] hover:underline text-sm">
-                    Return to login
-                  </Link>
+                  </div>
                 </div>
               ) : (
-                <>
-                  <p className="text-sm text-gray-600 mb-4">
-                    To reset your password, enter your email address below. If we find a 
-                    matching account, you will receive an email with instructions to reset 
-                    your password.
-                  </p>
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email address
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#1d4f91] focus:border-[#1d4f91]"
-                      />
+                <form onSubmit={handleSubmit}>
+                  <div className="login-field">
+                    <label htmlFor="email">Email Address</label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your registered email address"
+                      required
+                      autoComplete="email"
+                    />
+                    <div className="login-field-hint">
+                      Enter the email address associated with your account
                     </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-2 px-4 bg-[#1d4f91] text-white text-sm font-medium rounded hover:bg-[#163d70] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? 'Sending...' : 'Search'}
-                    </button>
-                  </form>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                    <p>
-                      <Link href="/login" className="text-[#0066cc] hover:underline">
-                        Return to login
-                      </Link>
-                    </p>
                   </div>
-                </>
+
+                  <button
+                    type="submit"
+                    className="login-submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Sending...' : 'Reset Password'}
+                  </button>
+                </form>
               )}
+            </div>
+
+            <div className="login-box-footer">
+              <Link href="/login">Return to login</Link>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-300 py-3">
-        <div className="max-w-5xl mx-auto px-4 text-center text-xs text-gray-500">
-          ProctorExam &copy; 2026. Secure Examination Portal.
-        </div>
+      <footer className="login-footer">
+        <p>&copy; 2026 ProctoredExam. All rights reserved.</p>
+        <p style={{ marginTop: '4px' }}>
+          For technical support, contact: support@proctoredexam.com | +91-XXX-XXXXXXX
+        </p>
       </footer>
     </div>
   );

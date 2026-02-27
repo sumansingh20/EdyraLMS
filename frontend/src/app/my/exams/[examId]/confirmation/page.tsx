@@ -198,7 +198,7 @@ export default function ExamConfirmationPage() {
       {/* Success Message */}
       <div className="lms-alert lms-alert-success" style={{ marginBottom: '24px' }}>
         <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-          ✓ Examination Submitted Successfully
+          Examination Submitted Successfully
         </div>
         <div>
           Your answers have been recorded. Please save this confirmation for your records.

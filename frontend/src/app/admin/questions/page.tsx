@@ -195,8 +195,8 @@ export default function QuestionBankPage() {
                   {cat.name} <span style={{ color: 'var(--text-muted)' }}>({cat.questionCount})</span>
                 </button>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button onClick={() => { setEditingCategory(cat); setCategoryForm({ name: cat.name, description: cat.description || '', subject: cat.subject || '' }); setShowCategoryModal(true); setError(''); }} style={{ fontSize: '11px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>✏️</button>
-                  <button onClick={() => handleDeleteCategory(cat._id)} style={{ fontSize: '11px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>🗑️</button>
+                  <button onClick={() => { setEditingCategory(cat); setCategoryForm({ name: cat.name, description: cat.description || '', subject: cat.subject || '' }); setShowCategoryModal(true); setError(''); }} style={{ fontSize: '11px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => handleDeleteCategory(cat._id)} style={{ fontSize: '11px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             ))}

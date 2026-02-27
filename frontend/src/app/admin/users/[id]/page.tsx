@@ -129,9 +129,9 @@ export default function UserDetailPage() {
   };
 
   const getRoleIcon = (role: string) => {
-    if (role === 'admin') return '🛡️';
-    if (role === 'teacher') return '👨‍🏫';
-    return '🎓';
+    if (role === 'admin') return '[Admin]';
+    if (role === 'teacher') return '[Teacher]';
+    return '[Student]';
   };
 
   if (loading) {
@@ -265,7 +265,7 @@ export default function UserDetailPage() {
           {/* Role-specific Details */}
           <div className="lms-section animate-fade-in-up" style={{ marginBottom: '20px' }}>
             <div className="lms-section-title">
-              {user.role === 'student' ? '🎓 Student Details' : '👔 Staff Details'}
+              {user.role === 'student' ? 'Student Details' : 'Staff Details'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px' }}>
               {editing ? (

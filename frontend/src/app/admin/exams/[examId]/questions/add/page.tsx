@@ -53,14 +53,14 @@ const defaultQuestion: QuestionForm = {
 const QUESTION_TYPES: { value: QuestionType; label: string; icon: string }[] = [
   { value: 'mcq-single', label: 'MCQ (Single)', icon: '○' },
   { value: 'mcq-multiple', label: 'MCQ (Multi)', icon: '☐' },
-  { value: 'true-false', label: 'True / False', icon: '✓✗' },
+  { value: 'true-false', label: 'True / False', icon: 'T/F' },
   { value: 'fill-blank', label: 'Fill in Blank', icon: '___' },
   { value: 'short-answer', label: 'Short Answer', icon: 'Aa' },
   { value: 'numerical', label: 'Numerical', icon: '#' },
   { value: 'long-answer', label: 'Essay', icon: '¶' },
   { value: 'matching', label: 'Matching', icon: '↔' },
   { value: 'ordering', label: 'Ordering', icon: '↕' },
-  { value: 'image-based', label: 'Image Based', icon: '🖼' },
+  { value: 'image-based', label: 'Image Based', icon: 'IMG' },
   { value: 'code', label: 'Code', icon: '</>' },
 ];
 

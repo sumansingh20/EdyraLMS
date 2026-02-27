@@ -25,6 +25,11 @@ interface ExamSettings {
   negativeMarkValue: number;
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
+  showQuestionNumbers: boolean;
+  maxAttempts: number;
+  allowReview: boolean;
+  showCorrectAnswers: boolean;
+  showExplanations: boolean;
   calculatorType: 'none' | 'basic' | 'scientific';
   requireFullscreen: boolean;
   detectTabSwitch: boolean;
@@ -51,6 +56,11 @@ const defaultSettings: ExamSettings = {
   negativeMarkValue: 0.25,
   shuffleQuestions: true,
   shuffleOptions: true,
+  showQuestionNumbers: true,
+  maxAttempts: 1,
+  allowReview: true,
+  showCorrectAnswers: false,
+  showExplanations: false,
   calculatorType: 'none',
   requireFullscreen: true,
   detectTabSwitch: true,
@@ -133,10 +143,15 @@ export default function TeacherCreateExamPage() {
         endTime: new Date(settings.endTime).toISOString(),
         totalMarks: settings.totalMarks,
         passingMarks: settings.passingMarks,
+        maxAttempts: settings.maxAttempts,
         negativeMarking: settings.negativeMarking,
         negativeMarkValue: settings.negativeMarkValue,
         randomizeQuestions: settings.shuffleQuestions,
         randomizeOptions: settings.shuffleOptions,
+        showQuestionNumbers: settings.showQuestionNumbers,
+        allowReview: settings.allowReview,
+        showCorrectAnswers: settings.showCorrectAnswers,
+        showExplanations: settings.showExplanations,
         calculatorType: settings.calculatorType,
         calculatorEnabled: settings.calculatorType !== 'none',
         enableProctoring: settings.requireFullscreen || settings.detectTabSwitch || settings.detectCopyPaste,
@@ -208,13 +223,19 @@ export default function TeacherCreateExamPage() {
         >
           Batch Settings
         </button>
-        <button 
+        <button
           className={`lms-tab ${activeTab === 'marks' ? 'lms-tab-active' : ''}`}
           onClick={() => setActiveTab('marks')}
         >
           Marks &amp; Grading
         </button>
-        <button 
+        <button
+          className={`lms-tab ${activeTab === 'review' ? 'lms-tab-active' : ''}`}
+          onClick={() => setActiveTab('review')}
+        >
+          Review Options
+        </button>
+        <button
           className={`lms-tab ${activeTab === 'proctoring' ? 'lms-tab-active' : ''}`}
           onClick={() => setActiveTab('proctoring')}
         >
@@ -453,6 +474,20 @@ export default function TeacherCreateExamPage() {
             <div className="lms-section-title mt-6">Question Behavior</div>
 
             <div className="lms-form-group">
+              <label className="lms-label">Attempts Allowed</label>
+              <input
+                type="number"
+                className="lms-input"
+                style={{ width: '100px' }}
+                value={settings.maxAttempts}
+                onChange={(e) => updateSettings('maxAttempts', Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
+                min={1}
+                max={5}
+              />
+              <div className="lms-form-help">Number of attempts a student can take (1-5)</div>
+            </div>
+
+            <div className="lms-form-group">
               <label className="lms-checkbox-label">
                 <input
                   type="checkbox"
@@ -475,6 +510,18 @@ export default function TeacherCreateExamPage() {
             </div>
 
             <div className="lms-form-group">
+              <label className="lms-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={settings.showQuestionNumbers}
+                  onChange={(e) => updateSettings('showQuestionNumbers', e.target.checked)}
+                />
+                Show Question Numbers
+              </label>
+              <div className="lms-form-help">Display question numbers to students during the exam</div>
+            </div>
+
+            <div className="lms-form-group">
               <label className="lms-label">Calculator</label>
               <select
                 className="lms-select w-52"
@@ -487,6 +534,54 @@ export default function TeacherCreateExamPage() {
                 <option value="scientific">Scientific Calculator</option>
               </select>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'review' && (
+          <div className="lms-form-section">
+            <div className="lms-section-title">Review Options</div>
+
+            <div className="lms-alert lms-alert-info">
+              These settings control what students can see after submitting their exam.
+            </div>
+
+            <div className="lms-form-group">
+              <label className="lms-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={settings.allowReview}
+                  onChange={(e) => updateSettings('allowReview', e.target.checked)}
+                />
+                Allow review after submission
+              </label>
+              <div className="lms-form-help">Students can review their attempt after submitting</div>
+            </div>
+
+            {settings.allowReview && (
+              <>
+                <div className="lms-form-group">
+                  <label className="lms-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={settings.showCorrectAnswers}
+                      onChange={(e) => updateSettings('showCorrectAnswers', e.target.checked)}
+                    />
+                    Show correct answers during review
+                  </label>
+                </div>
+
+                <div className="lms-form-group">
+                  <label className="lms-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={settings.showExplanations}
+                      onChange={(e) => updateSettings('showExplanations', e.target.checked)}
+                    />
+                    Show answer explanations during review
+                  </label>
+                </div>
+              </>
+            )}
           </div>
         )}
 

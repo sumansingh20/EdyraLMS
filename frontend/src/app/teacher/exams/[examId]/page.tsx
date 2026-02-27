@@ -437,7 +437,7 @@ export default function TeacherExamDetailPage() {
             <div className="lms-modal-body">
               <p>{actionModalContent.message}</p>
               <div className="lms-alert lms-alert-warning mt-3">
-                <strong>⚠ Warning:</strong> {actionModalContent.warning}
+                <strong>Warning:</strong> {actionModalContent.warning}
               </div>
             </div>
             <div className="lms-modal-footer">

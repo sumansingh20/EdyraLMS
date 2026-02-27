@@ -83,8 +83,33 @@ export default function AdminResultsPage() {
     );
   });
 
+  const totalResults = filteredResults.length;
+  const passedCount = filteredResults.filter(r => r.passed).length;
+  const failedCount = totalResults - passedCount;
+  const avgScore = totalResults > 0 ? Math.round(filteredResults.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalResults) : 0;
+
   return (
     <LMSLayout pageTitle="Results" breadcrumbs={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Results' }]}>
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 20 }}>
+        <div className="lms-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Total Results</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-primary)' }}>{totalResults}</div>
+        </div>
+        <div className="lms-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Passed</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#16a34a' }}>{passedCount}</div>
+        </div>
+        <div className="lms-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Failed</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#dc2626' }}>{failedCount}</div>
+        </div>
+        <div className="lms-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Average Score</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--primary)' }}>{avgScore}%</div>
+        </div>
+      </div>
+
       <div className="lms-card" style={{ marginBottom: '24px', padding: '16px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -130,7 +155,7 @@ export default function AdminResultsPage() {
                   <td>{Math.round(result.percentage || 0)}%</td>
                   <td>
                     <span className={`lms-badge ${result.passed ? 'lms-badge-success' : 'lms-badge-danger'}`}>
-                      {result.passed ? '✅ PASSED' : '❌ FAILED'}
+                      {result.passed ? 'PASSED' : 'FAILED'}
                     </span>
                   </td>
                   <td>

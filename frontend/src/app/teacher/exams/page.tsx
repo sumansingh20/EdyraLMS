@@ -282,7 +282,7 @@ export default function TeacherExamsPage() {
 
       {activeExams.length > 0 && (
         <div className="lms-alert lms-alert-warning">
-          <div className="lms-alert-title">⚠ LIVE EXAMINATION IN PROGRESS</div>
+          <div className="lms-alert-title">LIVE EXAMINATION IN PROGRESS</div>
           <div>{activeExams.length} examination(s) currently active.</div>
         </div>
       )}
@@ -358,7 +358,7 @@ export default function TeacherExamsPage() {
 
       {activeExams.length > 0 && (
         <div className="lms-section">
-          <div className="lms-section-title" style={{ color: 'var(--success)' }}>🔴 Active Examinations</div>
+          <div className="lms-section-title" style={{ color: 'var(--success)' }}>Active Examinations</div>
           <div className="lms-table-container">
             <table className="lms-table">
               <thead>
@@ -450,7 +450,7 @@ export default function TeacherExamsPage() {
             <div className="lms-modal-body">
               <p>{actionModalContent.message}</p>
               <div className="lms-alert lms-alert-warning mt-3">
-                <strong>⚠ Warning:</strong> {actionModalContent.warning}
+                <strong>Warning:</strong> {actionModalContent.warning}
               </div>
             </div>
             <div className="lms-modal-footer">

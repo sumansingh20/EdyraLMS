@@ -182,7 +182,7 @@ export default function RegisterPage() {
                   <ul style={{ paddingLeft: '16px', margin: '4px 0 0' }}>
                     {passwordRequirements.map((req, index) => (
                       <li key={index} style={{ color: req.test(formData.password) ? '#5cb85c' : '#666' }}>
-                        {req.test(formData.password) ? '✓' : '○'} {req.text}
+                        {req.test(formData.password) ? '[ok]' : '[ ]'} {req.text}
                       </li>
                     ))}
                   </ul>

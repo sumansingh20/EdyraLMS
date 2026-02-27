@@ -151,7 +151,7 @@ export default function GradeSubmissionPage() {
                       >
                         {String.fromCharCode(65 + oi)}. {opt.text}
                         {answer.selectedOptions?.includes(oi) && <span className="ml-2 text-xs">(selected)</span>}
-                        {opt.isCorrect && <span className="ml-2 text-green-600 text-xs">✓ correct</span>}
+                        {opt.isCorrect && <span className="ml-2 text-green-600 text-xs">correct</span>}
                       </div>
                     ))}
                   </div>

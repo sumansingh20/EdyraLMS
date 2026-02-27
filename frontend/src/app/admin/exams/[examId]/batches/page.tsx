@@ -171,7 +171,7 @@ export default function BatchesPage() {
       {/* Active Batch Alert */}
       {summary.active > 0 && (
         <div className="lms-alert lms-alert-warning">
-          <div className="lms-alert-title">⚠ BATCH IN PROGRESS</div>
+          <div className="lms-alert-title">BATCH IN PROGRESS</div>
           <div>{summary.active} batch(es) currently active. Students are taking the examination.</div>
         </div>
       )}
@@ -325,7 +325,7 @@ export default function BatchesPage() {
                           
                           {batch.isLocked && (
                             <span style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '4px' }}>
-                              🔒 Locked
+                              Locked
                             </span>
                           )}
                         </div>
@@ -378,7 +378,7 @@ export default function BatchesPage() {
               
               {actionType === 'complete' && (
                 <div className="lms-alert lms-alert-warning" style={{ marginTop: '12px' }}>
-                  <strong>⚠ Warning:</strong> All active sessions in this batch will be FORCE SUBMITTED.
+                  <strong>Warning:</strong> All active sessions in this batch will be FORCE SUBMITTED.
                   This action cannot be undone.
                 </div>
               )}

@@ -233,7 +233,7 @@ export default function QuizAttemptLayout({
             </div>
             {violationCount >= 4 && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
-                ⚠️ One more violation will auto-submit your exam
+                Warning: One more violation will auto-submit your exam
               </p>
             )}
           </div>

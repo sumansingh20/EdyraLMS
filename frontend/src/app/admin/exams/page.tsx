@@ -358,12 +358,12 @@ export default function AdminExamsPage() {
               <span className="font-medium">EXAM CENTER</span>
             </div>
             <div>
-              <span style={{ opacity: 0.8 }}>🕐 Server Time:</span>
+              <span style={{ opacity: 0.8 }}>Server Time:</span>
               <span className="font-mono ml-2 pulse-text">{format(serverTime, 'dd MMM yyyy, HH:mm:ss')}</span>
             </div>
           </div>
           <Link href="/admin/exams/create" className="lms-btn btn-pulse" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
-            ➕ Create Examination
+            + Create Examination
           </Link>
         </div>
       </div>
@@ -373,38 +373,38 @@ export default function AdminExamsPage() {
         <div className="live-exam-alert animate-pulse-border animate-fadeIn">
           <div className="flex items-center gap-3">
             <span className="live-indicator"></span>
-            <span className="font-semibold">⚠️ LIVE EXAMINATION IN PROGRESS</span>
+            <span className="font-semibold">LIVE EXAMINATION IN PROGRESS</span>
           </div>
           <span className="text-sm">{activeExams.length} examination(s) currently active. Students are taking exams.</span>
-          <Link href="/admin/monitor" className="lms-btn lms-btn-sm" style={{ marginTop: '8px' }}>🖥️ Open Live Monitor</Link>
+          <Link href="/admin/monitor" className="lms-btn lms-btn-sm" style={{ marginTop: '8px' }}>Open Live Monitor</Link>
         </div>
       )}
 
       {/* Stats Cards */}
       <div className="lms-stats-row monitor-stats">
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-          <div className="lms-stat-icon">📋</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{exams.length}</div>
           <div className="lms-stat-label">Total Exams</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-active animate-fadeInUp" style={{ animationDelay: '0.15s', position: 'relative' }}>
-          <div className="lms-stat-icon">🟢</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{activeExams.length}</div>
           <div className="lms-stat-label">Active Now</div>
           {activeExams.length > 0 && <div className="live-indicator" style={{ position: 'absolute', top: '10px', right: '10px' }}></div>}
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="lms-stat-icon">📢</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{exams.filter(e => e.status === 'published').length}</div>
           <div className="lms-stat-label">Published</div>
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
-          <div className="lms-stat-icon">📝</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{exams.filter(e => e.status === 'draft').length}</div>
           <div className="lms-stat-label">Draft</div>
         </div>
         <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-          <div className="lms-stat-icon">✅</div>
+          <div className="lms-stat-icon"></div>
           <div className="lms-stat-value">{exams.filter(e => ['completed', 'archived'].includes(e.status)).length}</div>
           <div className="lms-stat-label">Completed</div>
         </div>
@@ -412,7 +412,7 @@ export default function AdminExamsPage() {
 
       {/* Filter Section */}
       <div className="lms-section animate-fadeIn" style={{ animationDelay: '0.35s' }}>
-        <div className="lms-section-title"><span className="section-icon">🔍</span> Filter & Search</div>
+        <div className="lms-section-title"><span className="section-icon"></span> Filter & Search</div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="lms-form-group" style={{ margin: 0, flex: '1 1 200px' }}>
             <label className="lms-label">Search</label>
@@ -422,11 +422,11 @@ export default function AdminExamsPage() {
             <label className="lms-label">Status</label>
             <select className="lms-select" title="Filter by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="all">All Status</option>
-              <option value="draft">📝 Draft</option>
-              <option value="published">📢 Published</option>
-              <option value="ongoing">🟢 Active</option>
-              <option value="completed">✅ Completed</option>
-              <option value="archived">🔒 Locked</option>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="ongoing">Active</option>
+              <option value="completed">Completed</option>
+              <option value="archived">Locked</option>
             </select>
           </div>
         </div>
@@ -434,21 +434,21 @@ export default function AdminExamsPage() {
 
       {/* Lifecycle Info */}
       <div className="lms-info-box guidelines-box animate-fadeIn" style={{ animationDelay: '0.4s', marginBottom: '16px' }}>
-        <div className="lms-info-box-header"><span className="section-icon">📖</span> Examination Lifecycle</div>
+        <div className="lms-info-box-header"><span className="section-icon"></span> Examination Lifecycle</div>
         <div className="lms-info-box-body" style={{ fontSize: '12px' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="lms-status">📝 DRAFT</span><span>→</span>
-            <span className="lms-status lms-status-info">📢 PUBLISHED</span><span>→</span>
-            <span className="lms-status lms-status-active">🟢 ACTIVE</span><span>→</span>
-            <span className="lms-status lms-status-success">✅ COMPLETED</span><span>→</span>
-            <span className="lms-status lms-status-closed">🔒 LOCKED</span>
+            <span className="lms-status">DRAFT</span><span>→</span>
+            <span className="lms-status lms-status-info">PUBLISHED</span><span>→</span>
+            <span className="lms-status lms-status-active">ACTIVE</span><span>→</span>
+            <span className="lms-status lms-status-success">COMPLETED</span><span>→</span>
+            <span className="lms-status lms-status-closed">LOCKED</span>
           </div>
         </div>
       </div>
 
       {activeExams.length > 0 && (
         <div className="lms-section">
-          <div className="lms-section-title" style={{ color: 'var(--success)' }}>🔴 Active Examinations (READ-ONLY)</div>
+          <div className="lms-section-title" style={{ color: 'var(--success)' }}>Active Examinations (READ-ONLY)</div>
           <div className="lms-table-container">
             <table className="lms-table">
               <thead><tr><th>Code</th><th>Title</th><th>Subject</th><th>End Time</th><th>Questions</th><th>Submissions</th><th>Actions</th></tr></thead>
@@ -539,7 +539,7 @@ export default function AdminExamsPage() {
             <div className="lms-modal-header">{actionModalContent.title}</div>
             <div className="lms-modal-body">
               <p>{actionModalContent.message}</p>
-              <div className="lms-alert lms-alert-warning" style={{ marginTop: '12px' }}><strong>⚠ Warning:</strong> {actionModalContent.warning}</div>
+              <div className="lms-alert lms-alert-warning" style={{ marginTop: '12px' }}><strong>Warning:</strong> {actionModalContent.warning}</div>
             </div>
             <div className="lms-modal-footer">
               <button onClick={() => { setShowActionModal(false); setExamForAction(null); setActionType(''); }} className="lms-btn" disabled={isProcessing}>Cancel</button>

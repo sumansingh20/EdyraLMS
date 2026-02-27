@@ -97,12 +97,12 @@ export default function ResultsPage() {
             <div className="lms-stat-label">Total Exams</div>
           </div>
           <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-            <div className="lms-stat-icon">✅</div>
+            <div className="lms-stat-icon"></div>
             <div className="lms-stat-value" style={{ color: 'var(--success)' }}>{statistics.passed}</div>
             <div className="lms-stat-label">Passed</div>
           </div>
           <div className="lms-stat stat-card-monitor animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
-            <div className="lms-stat-icon">❌</div>
+            <div className="lms-stat-icon"></div>
             <div className="lms-stat-value" style={{ color: 'var(--danger)' }}>{statistics.failed}</div>
             <div className="lms-stat-label">Failed</div>
           </div>
@@ -140,7 +140,7 @@ export default function ResultsPage() {
                 className={`lms-btn lms-btn-sm ${filter === f ? 'lms-btn-primary' : ''}`}
                 onClick={() => setFilter(f)}
               >
-                {f === 'all' ? 'All' : f === 'passed' ? '✅ Passed' : '❌ Failed'}
+                {f === 'all' ? 'All' : f === 'passed' ? 'Passed' : 'Failed'}
               </button>
             ))}
           </div>
@@ -194,7 +194,7 @@ export default function ResultsPage() {
                       <span
                         className={`lms-badge ${result.status === 'passed' ? 'lms-badge-success' : 'lms-badge-danger'}`}
                       >
-                        {result.status === 'passed' ? '✅ PASSED' : '❌ FAILED'}
+                        {result.status === 'passed' ? 'PASSED' : 'FAILED'}
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>{result.attemptNumber || 1}</td>

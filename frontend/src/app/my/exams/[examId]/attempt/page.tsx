@@ -259,7 +259,7 @@ export default function SecureExamAttemptPage() {
     const newCount = violationCountRef.current + 1;
     violationCountRef.current = newCount;
     setViolationCount(newCount);
-    setViolationMsg(`⚠️ Violation #${newCount}: ${desc}`);
+    setViolationMsg(`Warning - Violation #${newCount}: ${desc}`);
     setShowViolationPopup(true);
     setTimeout(() => setShowViolationPopup(false), 4000);
 
@@ -629,7 +629,7 @@ export default function SecureExamAttemptPage() {
             </>
           ) : (
             <>
-              <div className="proctor-check-icon">✓</div>
+              <div className="proctor-check-icon">Submitted</div>
               <h2>Exam Submitted</h2>
               <p>Redirecting to confirmation page...</p>
             </>
@@ -647,7 +647,7 @@ export default function SecureExamAttemptPage() {
       <div className="proctor-fullpage">
         <div className="proctor-preflight-card">
           <div className="proctor-preflight-header">
-            <div className="proctor-shield-icon">🛡️</div>
+            <div className="proctor-shield-icon">Secure</div>
             <h1>Secure Exam Environment</h1>
             <h2>{examTitle}</h2>
           </div>
@@ -659,28 +659,28 @@ export default function SecureExamAttemptPage() {
 
             <div className="proctor-preflight-items">
               <div className="proctor-preflight-item">
-                <span className="proctor-check-badge">📷</span>
+                <span className="proctor-check-badge">CAM</span>
                 <div>
                   <strong>Webcam Recording</strong>
                   <p>Your camera will be turned on for identity verification and monitoring.</p>
                 </div>
               </div>
               <div className="proctor-preflight-item">
-                <span className="proctor-check-badge">🎤</span>
+                <span className="proctor-check-badge">MIC</span>
                 <div>
                   <strong>Microphone Monitoring</strong>
                   <p>Audio levels will be monitored to detect conversations.</p>
                 </div>
               </div>
               <div className="proctor-preflight-item">
-                <span className="proctor-check-badge">🖥️</span>
+                <span className="proctor-check-badge">FS</span>
                 <div>
                   <strong>Fullscreen Lock</strong>
                   <p>The exam will run in fullscreen mode. Exiting is a violation.</p>
                 </div>
               </div>
               <div className="proctor-preflight-item">
-                <span className="proctor-check-badge">🔒</span>
+                <span className="proctor-check-badge">LOCK</span>
                 <div>
                   <strong>Activity Monitoring</strong>
                   <p>Tab switches, copy/paste, right-click, and shortcuts are blocked and recorded.</p>
@@ -689,7 +689,7 @@ export default function SecureExamAttemptPage() {
             </div>
 
             <div className="proctor-preflight-rules">
-              <h3>⚠️ Important Rules</h3>
+              <h3>Important Rules</h3>
               <ul>
                 <li>Do NOT switch tabs or windows during the exam</li>
                 <li>Do NOT use any external applications</li>
@@ -715,7 +715,7 @@ export default function SecureExamAttemptPage() {
             </div>
 
             <button className="proctor-start-btn" onClick={beginExam}>
-              🚀 Start Secure Exam
+              Start Secure Exam
             </button>
             <p className="proctor-preflight-note">
               By clicking Start, you agree to the proctoring conditions above.
@@ -754,7 +754,7 @@ export default function SecureExamAttemptPage() {
 
       {!isFullscreen && (
         <div className="proctor-fs-reminder" onClick={enterFullscreen}>
-          ⚠️ Fullscreen required — Click here to re-enter fullscreen
+          Warning: Fullscreen required -- Click here to re-enter fullscreen
         </div>
       )}
 
@@ -771,16 +771,16 @@ export default function SecureExamAttemptPage() {
         <div className="proctor-header-center">
           <div className="proctor-indicators">
             <div className={`proctor-indicator ${cameraStream ? 'active' : 'error'}`} title="Camera">
-              📷 {cameraStream ? 'ON' : 'OFF'}
+              CAM {cameraStream ? 'ON' : 'OFF'}
             </div>
             <div className={`proctor-indicator ${micStream ? 'active' : 'error'}`} title="Microphone">
-              🎤 {micStream ? 'ON' : 'OFF'}
+              MIC {micStream ? 'ON' : 'OFF'}
             </div>
             <div className={`proctor-indicator ${isFullscreen ? 'active' : 'error'}`} title="Fullscreen">
-              🖥️ {isFullscreen ? 'FS' : '!FS'}
+              {isFullscreen ? 'FS' : '!FS'}
             </div>
             <div className={`proctor-indicator ${violationCount > 3 ? 'error' : violationCount > 0 ? 'warn' : 'active'}`}>
-              ⚠️ {violationCount}/{MAX_VIOLATIONS}
+              {violationCount}/{MAX_VIOLATIONS}
             </div>
           </div>
         </div>
@@ -790,7 +790,7 @@ export default function SecureExamAttemptPage() {
             {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : 'Auto-save ON'}
           </div>
           <div className={`proctor-timer ${isWarning ? 'warning' : ''} ${isCritical ? 'critical' : ''}`}>
-            🕐 {formatTime(timeRemaining)}
+            Time: {formatTime(timeRemaining)}
           </div>
         </div>
       </header>
@@ -812,7 +812,7 @@ export default function SecureExamAttemptPage() {
 
           {/* Audio level */}
           <div className="proctor-mic-box">
-            <div className="proctor-mic-label">🎤 Audio Level</div>
+            <div className="proctor-mic-label">Audio Level</div>
             <div className="proctor-mic-bar-bg">
               <div
                 className={`proctor-mic-bar ${micLevel > 60 ? 'high' : micLevel > 30 ? 'mid' : 'low'}`}
@@ -1048,11 +1048,11 @@ export default function SecureExamAttemptPage() {
               <button className={`proctor-btn ${ans?.markedForReview ? 'flagged' : 'secondary'}`} onClick={toggleFlag}>
                 {ans?.markedForReview ? '⚑ Unflag' : '⚐ Flag for Review'}
               </button>
-              <button className="proctor-btn secondary" onClick={() => setShowCalc(!showCalc)}>🧮 Calculator</button>
+              <button className="proctor-btn secondary" onClick={() => setShowCalc(!showCalc)}>Calculator</button>
             </div>
             <div className="proctor-actions-right">
               <button className="proctor-btn secondary" onClick={saveProgress} disabled={isSaving}>
-                💾 {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>
@@ -1116,7 +1116,7 @@ export default function SecureExamAttemptPage() {
             </div>
             {stats.unanswered > 0 && (
               <div className="proctor-modal-warning">
-                ⚠️ You have {stats.unanswered} unanswered question{stats.unanswered > 1 ? 's' : ''}.
+                Warning: You have {stats.unanswered} unanswered question{stats.unanswered > 1 ? 's' : ''}.
               </div>
             )}
             <p className="proctor-modal-note">
@@ -1124,7 +1124,7 @@ export default function SecureExamAttemptPage() {
             </p>
             <div className="proctor-modal-actions">
               <button className="proctor-btn secondary" onClick={() => setShowSubmitModal(false)}>Cancel — Go Back</button>
-              <button className="proctor-btn danger" onClick={handleSubmit}>✓ Confirm Submit</button>
+              <button className="proctor-btn danger" onClick={handleSubmit}>Confirm Submit</button>
             </div>
           </div>
         </div>

@@ -122,26 +122,26 @@ export default function ExamDetailsPage() {
         <div className="lms-alert lms-alert-success live-exam-alert animate-pulse-border">
           <div className="live-indicator"></div>
           <div>
-            <div className="lms-alert-title">🟢 EXAMINATION IS OPEN</div>
+            <div className="lms-alert-title">EXAMINATION IS OPEN</div>
             <div>This examination is currently open. You can start your attempt now.</div>
           </div>
         </div>
       )}
       {isUpcoming && (
         <div className="lms-alert lms-alert-info">
-          <div className="lms-alert-title">📅 UPCOMING EXAMINATION</div>
+          <div className="lms-alert-title">UPCOMING EXAMINATION</div>
           <div>This examination will open on {format(new Date(exam.startTime), 'dd MMM yyyy, HH:mm')}.</div>
         </div>
       )}
       {isEnded && (
         <div className="lms-alert lms-alert-error">
-          <div className="lms-alert-title">🔒 EXAMINATION CLOSED</div>
+          <div className="lms-alert-title">EXAMINATION CLOSED</div>
           <div>This examination window has ended.</div>
         </div>
       )}
       {isOpen && !hasAttemptsRemaining && (
         <div className="lms-alert lms-alert-warning">
-          <div className="lms-alert-title">⚠️ NO ATTEMPTS REMAINING</div>
+          <div className="lms-alert-title">NO ATTEMPTS REMAINING</div>
           <div>You have used all {exam.maxAttempts} allowed attempt(s) for this examination.</div>
         </div>
       )}
@@ -214,7 +214,7 @@ export default function ExamDetailsPage() {
       {/* Important Rules */}
       <div className="lms-info-box guidelines-box animate-fadeIn" style={{ animationDelay: '0.2s' }}>
         <div className="lms-info-box-header">
-          <span className="section-icon">⚠️</span> Important Rules
+          <span className="section-icon"></span> Important Rules
         </div>
         <div className="lms-info-box-body" style={{ fontSize: '12px', lineHeight: '1.8' }}>
           <ul className="guidelines-list">
@@ -286,14 +286,14 @@ export default function ExamDetailsPage() {
           {hasActiveAttempt ? (
             <div>
               <p style={{ marginBottom: '12px', color: 'var(--warning)', fontWeight: 'bold' }}>
-                ⚠️ You have an active attempt in progress.
+                Warning: You have an active attempt in progress.
               </p>
               <Link
                 href={`/my/exams/${examId}/attempt`}
                 className="lms-btn lms-btn-primary"
                 style={{ padding: '14px 40px', fontSize: '16px' }}
               >
-                ▶ Resume Examination
+                Resume Examination
               </Link>
             </div>
           ) : canAttempt ? (
@@ -304,12 +304,12 @@ export default function ExamDetailsPage() {
                   style={{ padding: '14px 40px', fontSize: '16px' }}
                   onClick={() => setShowStartModal(true)}
                 >
-                  ▶ Start New Attempt
+                  Start New Attempt
                 </button>
               ) : (
                 <div className="lms-info-box" style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'left' }}>
                   <div className="lms-info-box-header" style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--warning)' }}>
-                    ⚠️ Confirm Start
+                    Confirm Start
                   </div>
                   <div className="lms-info-box-body">
                     <p style={{ marginBottom: '12px' }}>You are about to start <strong>{exam.title}</strong>.</p>
@@ -326,7 +326,7 @@ export default function ExamDetailsPage() {
                         onClick={handleStartAttempt}
                         disabled={isStarting}
                       >
-                        {isStarting ? 'Starting...' : '✓ Confirm — Start Exam'}
+                        {isStarting ? 'Starting...' : 'Confirm -- Start Exam'}
                       </button>
                     </div>
                   </div>

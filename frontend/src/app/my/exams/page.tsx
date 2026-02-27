@@ -103,7 +103,7 @@ export default function ExamListPage() {
       {/* Error Display */}
       {examError && (
         <div className="lms-alert lms-alert-error animate-fadeIn" style={{ marginBottom: '16px' }}>
-          <span className="section-icon">⚠️</span>
+          <span className="section-icon"></span>
           <div>
             <div className="lms-alert-title">Failed to Load Examinations</div>
             <div>{examError}</div>
@@ -123,7 +123,7 @@ export default function ExamListPage() {
         <div className="lms-alert lms-alert-warning live-exam-alert animate-pulse-border">
           <div className="live-indicator"></div>
           <div>
-            <div className="lms-alert-title">🔴 EXAMINATIONS OPEN NOW</div>
+            <div className="lms-alert-title">EXAMINATIONS OPEN NOW</div>
             <div>{activeCount} examination(s) are currently open. Click &quot;Start&quot; to begin.</div>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function ExamListPage() {
           <div className="lms-stat-label">Total Exams</div>
         </div>
         <div className="lms-stat stat-card-monitor stat-active animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-          <div className="lms-stat-icon pulse-icon">🟢</div>
+          <div className="lms-stat-icon pulse-icon"></div>
           <div className="lms-stat-value" style={{ color: 'var(--success)' }}>{activeCount}</div>
           <div className="lms-stat-label">Open Now</div>
         </div>

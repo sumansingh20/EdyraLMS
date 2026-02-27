@@ -130,7 +130,7 @@ export default function StudentDashboard() {
       {/* Error Display */}
       {examError && (
         <div className="lms-alert lms-alert-error animate-fadeIn" style={{ marginBottom: '16px' }}>
-          <span className="section-icon">⚠️</span>
+          <span className="section-icon"></span>
           <div>
             <div className="lms-alert-title">Failed to Load Examinations</div>
             <div>{examError}</div>
@@ -150,7 +150,7 @@ export default function StudentDashboard() {
         <div className="lms-alert lms-alert-success live-exam-alert animate-pulse-border">
           <div className="live-indicator"></div>
           <div>
-            <div className="lms-alert-title">🟢 ACTIVE EXAMINATION</div>
+            <div className="lms-alert-title">ACTIVE EXAMINATION</div>
             <div>You have {activeExams.length} examination(s) available. Please proceed immediately.</div>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function StudentDashboard() {
       {activeExams.length > 0 && (
         <div className="lms-section animate-fadeIn" style={{ animationDelay: '0.1s' }}>
           <div className="lms-section-title">
-            <span className="section-icon">🔴</span> Current Examinations
+            <span className="section-icon"></span> Current Examinations
           </div>
           <div className="lms-table-container">
             <table className="lms-table">
