@@ -8,13 +8,15 @@ interface Question {
   id: string;
   index: number;
   text: string;
-  type: 'mcq' | 'mcq_multiple' | 'true_false' | 'short_answer' | 'numerical' | 'essay' | 'matching' | 'ordering';
+  type: 'mcq' | 'mcq_multiple' | 'true_false' | 'short_answer' | 'numerical' | 'essay' | 'matching' | 'ordering' | 'fill_blank' | 'image_based' | 'code';
   backendType?: string;
   options?: { text: string; _id?: string }[];
   marks: number;
   imageUrl?: string;
   matchPairs?: { left: string; right: string }[];
   orderItems?: string[];
+  codeLanguage?: string;
+  answerTolerance?: number;
 }
 
 interface Answer {
@@ -392,6 +394,7 @@ export default function ExamAttemptPage() {
           body: JSON.stringify({
             questionId,
             selectedOption: answer.selectedOption,
+            selectedOptions: answer.selectedOptions,
             textAnswer: answer.textAnswer,
           }),
         }
@@ -787,6 +790,73 @@ export default function ExamAttemptPage() {
                       placeholder={currentQ.backendType === 'code' ? 'Write your code here...' : 'Write your answer here...'}
                       style={currentQ.backendType === 'code' ? { fontFamily: 'monospace' } : undefined}
                     />
+                  )}
+
+                  {currentQ.type === 'fill_blank' && (
+                    <input
+                      type="text"
+                      value={answers.get(currentQ.id)?.textAnswer || ''}
+                      onChange={(e) => handleAnswerChange(currentQ.id, { textAnswer: e.target.value })}
+                      className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Fill in the blank..."
+                    />
+                  )}
+
+                  {currentQ.type === 'image_based' && (
+                    <>
+                      {currentQ.imageUrl && (
+                        <div className="mb-4 text-center">
+                          <img src={currentQ.imageUrl} alt="Question" className="max-w-md max-h-64 rounded-lg border mx-auto" />
+                        </div>
+                      )}
+                      {currentQ.options && currentQ.options.length > 0 ? (
+                        currentQ.options.map((option, optIndex) => (
+                          <label
+                            key={optIndex}
+                            className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                              answers.get(currentQ.id)?.selectedOption === optIndex
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${currentQ.id}`}
+                              checked={answers.get(currentQ.id)?.selectedOption === optIndex}
+                              onChange={() => handleAnswerChange(currentQ.id, { selectedOption: optIndex })}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <span className="ml-3 text-gray-900">{option.text}</span>
+                          </label>
+                        ))
+                      ) : (
+                        <input
+                          type="text"
+                          value={answers.get(currentQ.id)?.textAnswer || ''}
+                          onChange={(e) => handleAnswerChange(currentQ.id, { textAnswer: e.target.value })}
+                          className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Type your answer based on the image..."
+                        />
+                      )}
+                    </>
+                  )}
+
+                  {currentQ.type === 'code' && (
+                    <div>
+                      {currentQ.codeLanguage && (
+                        <div className="mb-2 text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded inline-block">
+                          Language: {currentQ.codeLanguage}
+                        </div>
+                      )}
+                      <textarea
+                        value={answers.get(currentQ.id)?.textAnswer || ''}
+                        onChange={(e) => handleAnswerChange(currentQ.id, { textAnswer: e.target.value })}
+                        rows={12}
+                        className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        placeholder="Write your code here..."
+                        style={{ fontFamily: 'monospace', tabSize: 4 }}
+                      />
+                    </div>
                   )}
 
                   {currentQ.type === 'matching' && currentQ.matchPairs && (

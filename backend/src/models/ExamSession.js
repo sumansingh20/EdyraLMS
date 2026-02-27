@@ -62,6 +62,7 @@ const examSessionSchema = new mongoose.Schema({
       ref: 'Question',
     },
     selectedOption: Number,
+    selectedOptions: [Number],
     textAnswer: String,
     answeredAt: Date,
     timeTaken: Number, // seconds spent on this question

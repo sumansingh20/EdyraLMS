@@ -2,39 +2,38 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import LMSLayout from '@/components/layouts/LMSLayout';
 import api from '@/lib/api';
-import PageWrapper from '@/components/layouts/PageWrapper';
-import { Button, Input, Select, Textarea, Checkbox } from '@/components/common';
-import {
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  Save,
-  ArrowLeft,
-} from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Option {
-  text: string;
-  isCorrect: boolean;
-}
+interface MatchPair { left: string; right: string; }
+
+type QuestionType = 'mcq-single' | 'mcq-multiple' | 'true-false' | 'fill-blank' | 'numerical' | 'short-answer' | 'long-answer' | 'matching' | 'ordering' | 'image-based' | 'code';
 
 interface QuestionForm {
   questionText: string;
-  questionType: 'MCQ' | 'MSQ' | 'numerical' | 'descriptive';
+  questionType: QuestionType;
+  difficulty: 'easy' | 'medium' | 'hard';
   marks: number;
-  options: Option[];
+  negativeMarks: number;
+  options: { text: string; isCorrect: boolean }[];
   correctAnswer: string;
   explanation: string;
+  tags: string[];
+  matchPairs: MatchPair[];
+  correctOrder: string[];
   imageUrl: string;
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  answerTolerance: number;
+  codeLanguage: string;
 }
 
-const defaultForm: QuestionForm = {
+const defaultQuestion: QuestionForm = {
   questionText: '',
-  questionType: 'MCQ',
+  questionType: 'mcq-single',
+  difficulty: 'medium',
   marks: 1,
+  negativeMarks: 0,
   options: [
     { text: '', isCorrect: false },
     { text: '', isCorrect: false },
@@ -43,377 +42,565 @@ const defaultForm: QuestionForm = {
   ],
   correctAnswer: '',
   explanation: '',
+  tags: [],
+  matchPairs: [{ left: '', right: '' }, { left: '', right: '' }],
+  correctOrder: ['', '', ''],
   imageUrl: '',
-  category: '',
-  difficulty: 'medium',
+  answerTolerance: 0,
+  codeLanguage: 'javascript',
 };
+
+const QUESTION_TYPES: { value: QuestionType; label: string; icon: string }[] = [
+  { value: 'mcq-single', label: 'MCQ (Single)', icon: '○' },
+  { value: 'mcq-multiple', label: 'MCQ (Multi)', icon: '☐' },
+  { value: 'true-false', label: 'True / False', icon: '✓✗' },
+  { value: 'fill-blank', label: 'Fill in Blank', icon: '___' },
+  { value: 'short-answer', label: 'Short Answer', icon: 'Aa' },
+  { value: 'numerical', label: 'Numerical', icon: '#' },
+  { value: 'long-answer', label: 'Essay', icon: '¶' },
+  { value: 'matching', label: 'Matching', icon: '↔' },
+  { value: 'ordering', label: 'Ordering', icon: '↕' },
+  { value: 'image-based', label: 'Image Based', icon: '🖼' },
+  { value: 'code', label: 'Code', icon: '</>' },
+];
+
+const CODE_LANGUAGES = [
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'java', label: 'Java' },
+  { value: 'c', label: 'C' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'go', label: 'Go' },
+  { value: 'rust', label: 'Rust' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'other', label: 'Other' },
+];
 
 export default function AddQuestionPage() {
   const params = useParams();
   const router = useRouter();
   const examId = params.examId as string;
 
-  const [form, setForm] = useState<QuestionForm>(defaultForm);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [question, setQuestion] = useState<QuestionForm>({ ...defaultQuestion });
+  const [loading, setLoading] = useState(false);
   const [addAnother, setAddAnother] = useState(true);
+  const [tagInput, setTagInput] = useState('');
 
-  const updateForm = <K extends keyof QuestionForm>(key: K, value: QuestionForm[K]) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setQuestion(prev => ({ ...prev, [name]: ['marks', 'negativeMarks', 'answerTolerance'].includes(name) ? Number(value) : value }));
   };
 
-  const updateOption = (index: number, field: keyof Option, value: string | boolean) => {
-    const newOptions = [...form.options];
-    newOptions[index] = { ...newOptions[index], [field]: value };
-    
-    // For MCQ, ensure only one option is correct
-    if (field === 'isCorrect' && value === true && form.questionType === 'MCQ') {
-      newOptions.forEach((opt, i) => {
-        if (i !== index) opt.isCorrect = false;
-      });
+  const handleTypeChange = (type: QuestionType) => {
+    const newQ: QuestionForm = { ...defaultQuestion, questionType: type, difficulty: question.difficulty, marks: question.marks, negativeMarks: question.negativeMarks, tags: question.tags };
+    if (type === 'true-false') {
+      newQ.options = [{ text: 'True', isCorrect: true }, { text: 'False', isCorrect: false }];
     }
-    
-    updateForm('options', newOptions);
+    setQuestion(newQ);
+  };
+
+  const handleOptionChange = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+    const newOptions = [...question.options];
+    if (field === 'isCorrect') {
+      if (question.questionType === 'mcq-single' || question.questionType === 'true-false' || question.questionType === 'image-based') {
+        newOptions.forEach((o, i) => { o.isCorrect = i === index; });
+      } else {
+        newOptions[index].isCorrect = value as boolean;
+      }
+    } else {
+      newOptions[index].text = value as string;
+    }
+    setQuestion(prev => ({ ...prev, options: newOptions }));
   };
 
   const addOption = () => {
-    if (form.options.length >= 8) {
-      toast.error('Maximum 8 options allowed');
-      return;
+    if (question.options.length < 8) {
+      setQuestion(prev => ({ ...prev, options: [...prev.options, { text: '', isCorrect: false }] }));
     }
-    updateForm('options', [...form.options, { text: '', isCorrect: false }]);
   };
 
   const removeOption = (index: number) => {
-    if (form.options.length <= 2) {
-      toast.error('Minimum 2 options required');
-      return;
+    if (question.options.length > 2) {
+      setQuestion(prev => ({ ...prev, options: prev.options.filter((_, i) => i !== index) }));
     }
-    updateForm('options', form.options.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleMatchPairChange = (index: number, side: 'left' | 'right', value: string) => {
+    const pairs = [...question.matchPairs];
+    pairs[index][side] = value;
+    setQuestion(prev => ({ ...prev, matchPairs: pairs }));
+  };
+
+  const addMatchPair = () => {
+    if (question.matchPairs.length < 8) {
+      setQuestion(prev => ({ ...prev, matchPairs: [...prev.matchPairs, { left: '', right: '' }] }));
+    }
+  };
+
+  const removeMatchPair = (index: number) => {
+    if (question.matchPairs.length > 2) {
+      setQuestion(prev => ({ ...prev, matchPairs: prev.matchPairs.filter((_, i) => i !== index) }));
+    }
+  };
+
+  const handleOrderItemChange = (index: number, value: string) => {
+    const order = [...question.correctOrder];
+    order[index] = value;
+    setQuestion(prev => ({ ...prev, correctOrder: order }));
+  };
+
+  const addOrderItem = () => {
+    if (question.correctOrder.length < 10) {
+      setQuestion(prev => ({ ...prev, correctOrder: [...prev.correctOrder, ''] }));
+    }
+  };
+
+  const removeOrderItem = (index: number) => {
+    if (question.correctOrder.length > 2) {
+      setQuestion(prev => ({ ...prev, correctOrder: prev.correctOrder.filter((_, i) => i !== index) }));
+    }
+  };
+
+  const addTag = () => {
+    if (tagInput.trim() && !question.tags.includes(tagInput.trim())) {
+      setQuestion(prev => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setQuestion(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
+  };
+
+  const validateForm = (): string | null => {
+    if (!question.questionText.trim()) return 'Question text is required';
+    const type = question.questionType;
+    if (type === 'mcq-single' || type === 'mcq-multiple') {
+      const filled = question.options.filter(o => o.text.trim());
+      if (filled.length < 2) return 'At least 2 options are required';
+      if (!filled.some(o => o.isCorrect)) return 'Select at least one correct answer';
+      if (type === 'mcq-single' && filled.filter(o => o.isCorrect).length > 1) return 'Single choice: select only one correct answer';
+    }
+    if (type === 'true-false' && !question.options.some(o => o.isCorrect)) return 'Select True or False';
+    if ((type === 'fill-blank' || type === 'short-answer') && !question.correctAnswer.trim()) return 'Correct answer is required';
+    if (type === 'numerical' && (question.correctAnswer === '' || isNaN(Number(question.correctAnswer)))) return 'A valid numerical answer is required';
+    if (type === 'matching') {
+      const valid = question.matchPairs.filter(p => p.left.trim() && p.right.trim());
+      if (valid.length < 2) return 'At least 2 complete match pairs required';
+    }
+    if (type === 'ordering') {
+      const valid = question.correctOrder.filter(s => s.trim());
+      if (valid.length < 2) return 'At least 2 items required for ordering';
+    }
+    if (type === 'image-based') {
+      if (!question.imageUrl.trim()) return 'Image URL is required for image-based questions';
+      const filled = question.options.filter(o => o.text.trim());
+      if (filled.length >= 2 && !filled.some(o => o.isCorrect)) return 'Select the correct answer option';
+    }
+    return null;
+  };
+
+  const buildPayload = () => {
+    const type = question.questionType;
+    const base: Record<string, unknown> = {
+      questionText: question.questionText,
+      questionType: type,
+      marks: question.marks,
+      negativeMarks: question.negativeMarks,
+      explanation: question.explanation,
+      difficulty: question.difficulty,
+      tags: question.tags,
+    };
+    if (type === 'mcq-single' || type === 'mcq-multiple') {
+      const filled = question.options.filter(o => o.text.trim());
+      base.options = filled.map(o => ({ text: o.text }));
+      base.correctOptions = filled.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0);
+    }
+    if (type === 'true-false') {
+      base.options = question.options.map(o => ({ text: o.text }));
+      base.correctOptions = question.options.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0);
+    }
+    if (type === 'fill-blank' || type === 'short-answer') base.correctAnswer = question.correctAnswer;
+    if (type === 'numerical') { base.correctAnswer = Number(question.correctAnswer); base.answerTolerance = question.answerTolerance; }
+    if (type === 'long-answer') base.correctAnswer = question.correctAnswer || null;
+    if (type === 'code') { base.correctAnswer = question.correctAnswer || null; base.codeLanguage = question.codeLanguage; }
+    if (type === 'matching') base.matchPairs = question.matchPairs.filter(p => p.left.trim() && p.right.trim());
+    if (type === 'ordering') base.correctOrder = question.correctOrder.filter(s => s.trim());
+    if (type === 'image-based') {
+      base.imageUrl = question.imageUrl;
+      const filled = question.options.filter(o => o.text.trim());
+      if (filled.length >= 2) {
+        base.options = filled.map(o => ({ text: o.text }));
+        base.correctOptions = filled.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0);
+      } else {
+        base.correctAnswer = question.correctAnswer;
+      }
+    }
+    return base;
+  };
+
+  const handleSubmit = async (e: React.FormEvent, another = false) => {
     e.preventDefault();
-    
-    // Validation
-    if (!form.questionText.trim()) {
-      toast.error('Please enter the question text');
-      return;
-    }
-
-    if (form.questionType === 'MCQ' || form.questionType === 'MSQ') {
-      const filledOptions = form.options.filter(o => o.text.trim());
-      if (filledOptions.length < 2) {
-        toast.error('Please enter at least 2 options');
-        return;
-      }
-      
-      const hasCorrect = form.options.some(o => o.isCorrect);
-      if (!hasCorrect) {
-        toast.error('Please mark at least one correct answer');
-        return;
-      }
-    }
-
-    if (form.questionType === 'numerical' && !form.correctAnswer) {
-      toast.error('Please enter the correct answer');
-      return;
-    }
-
-    setIsSubmitting(true);
+    const err = validateForm();
+    if (err) { toast.error(err); return; }
+    setLoading(true);
     try {
-      // Filter to only filled options
-      const filledOptions = form.options.filter(o => o.text.trim());
-      
-      // Get indices of correct options
-      const correctOptionIndices = filledOptions
-        .map((opt, index) => opt.isCorrect ? index : -1)
-        .filter(index => index !== -1);
-      
-      // Map frontend questionType to backend format
-      const questionTypeMap: Record<string, string> = {
-        'MCQ': 'mcq-single',
-        'MSQ': 'mcq-multiple',
-        'numerical': 'numerical',
-        'descriptive': 'long-answer',
-      };
-
-      const payload: Record<string, any> = {
-        questionText: form.questionText,
-        questionType: questionTypeMap[form.questionType] || 'mcq-single',
-        marks: form.marks,
-        explanation: form.explanation,
-        difficulty: form.difficulty,
-      };
-
-      // Only send options/correctOptions for MCQ types
-      if (form.questionType === 'MCQ' || form.questionType === 'MSQ') {
-        payload.options = filledOptions.map(o => ({ text: o.text }));
-        payload.correctOptions = correctOptionIndices;
-      }
-
-      // Send correctAnswer for numerical type
-      if (form.questionType === 'numerical') {
-        payload.correctAnswer = parseFloat(form.correctAnswer) || 0;
-      }
-
+      const payload = buildPayload();
       await api.post(`/admin/exams/${examId}/questions`, payload);
-      toast.success('Question added successfully');
-
-      if (addAnother) {
-        setForm({ ...defaultForm });
+      toast.success('Question added successfully!');
+      if (another) {
+        setQuestion(prev => ({ ...defaultQuestion, questionType: prev.questionType, difficulty: prev.difficulty, marks: prev.marks, negativeMarks: prev.negativeMarks, tags: [] }));
+        if (question.questionType === 'true-false') {
+          setQuestion(prev => ({ ...prev, options: [{ text: 'True', isCorrect: true }, { text: 'False', isCorrect: false }] }));
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        router.push(`/admin/exams/${examId}`);
+        setTimeout(() => router.push(`/admin/exams/${examId}`), 800);
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to add question');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to add question');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
+  };
+
+  /* ===== Answer section renderer ===== */
+  const renderAnswerSection = () => {
+    const type = question.questionType;
+
+    if (type === 'true-false') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Correct Answer</h3>
+          </div>
+          <div style={{ padding: 16, display: 'flex', gap: 16 }}>
+            {['True', 'False'].map((label, i) => (
+              <label key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', border: `2px solid ${question.options[i]?.isCorrect ? '#22c55e' : 'var(--border)'}`, borderRadius: 8, cursor: 'pointer', background: question.options[i]?.isCorrect ? '#f0fdf4' : 'transparent', transition: 'all 0.2s' }}>
+                <input type="radio" name="tfAnswer" checked={question.options[i]?.isCorrect || false} onChange={() => setQuestion(prev => ({ ...prev, options: [{ text: 'True', isCorrect: i === 0 }, { text: 'False', isCorrect: i === 1 }] }))} />
+                <span style={{ fontWeight: 500 }}>{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'mcq-single' || type === 'mcq-multiple') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Options {type === 'mcq-multiple' ? '(select all correct)' : '(select one correct)'}</h3>
+            {question.options.length < 8 && (
+              <button type="button" onClick={addOption} className="lms-btn lms-btn-secondary" style={{ padding: '4px 12px', fontSize: 13 }}>+ Add</button>
+            )}
+          </div>
+          <div style={{ padding: 16 }}>
+            {question.options.map((opt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', borderRadius: 8, border: `1px solid ${opt.isCorrect ? '#22c55e' : 'var(--border)'}`, background: opt.isCorrect ? '#f0fdf4' : 'transparent', transition: 'all 0.2s' }}>
+                <input type={type === 'mcq-multiple' ? 'checkbox' : 'radio'} name="correctOpt" checked={opt.isCorrect} onChange={() => handleOptionChange(i, 'isCorrect', !opt.isCorrect)} style={{ accentColor: '#22c55e', width: 18, height: 18 }} />
+                <span style={{ width: 24, color: 'var(--text-muted)', fontSize: 14, fontWeight: 600 }}>{String.fromCharCode(65 + i)}.</span>
+                <input type="text" value={opt.text} onChange={e => handleOptionChange(i, 'text', e.target.value)} placeholder={`Option ${String.fromCharCode(65 + i)}`} className="lms-input" style={{ flex: 1 }} />
+                {question.options.length > 2 && (
+                  <button type="button" onClick={() => removeOption(i)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: '4px 8px' }} title="Remove option">×</button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'fill-blank' || type === 'short-answer') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>{type === 'fill-blank' ? 'Expected Answer (Fill in the Blank)' : 'Expected Answer'}</h3>
+          </div>
+          <div style={{ padding: 16 }}>
+            <input type="text" name="correctAnswer" value={question.correctAnswer} onChange={handleChange} placeholder={type === 'fill-blank' ? 'The word/phrase that fills the blank' : 'Expected short answer'} className="lms-input" style={{ width: '100%' }} />
+            <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>{type === 'fill-blank' ? 'Use ___ in question text to mark blank position.' : 'Case-insensitive matching.'}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'numerical') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Numerical Answer</h3>
+          </div>
+          <div style={{ padding: 16, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Correct Value *</label>
+              <input type="number" name="correctAnswer" value={question.correctAnswer} onChange={handleChange} step="any" placeholder="e.g., 42" className="lms-input" style={{ width: '100%' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Tolerance (±)</label>
+              <input type="number" name="answerTolerance" value={question.answerTolerance} onChange={handleChange} min="0" step="0.01" placeholder="0" className="lms-input" style={{ width: '100%' }} />
+              <p style={{ marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>Acceptable margin of error</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'long-answer') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Grading Guidelines</h3>
+          </div>
+          <div style={{ padding: 16 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Essay requires manual grading. Add a model answer below.</p>
+            <textarea name="correctAnswer" value={question.correctAnswer} onChange={handleChange} rows={5} className="lms-input" style={{ width: '100%' }} placeholder="Enter model answer or grading guidelines..." />
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'code') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Code Solution</h3>
+          </div>
+          <div style={{ padding: 16 }}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Programming Language</label>
+              <select name="codeLanguage" value={question.codeLanguage} onChange={handleChange} className="lms-input" style={{ width: '100%', maxWidth: 300 }} title="Language">
+                {CODE_LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+            </div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Expected Solution</label>
+            <textarea name="correctAnswer" value={question.correctAnswer} onChange={handleChange} rows={6} className="lms-input" style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }} placeholder="def solution():&#10;    pass" />
+            <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>Code questions require manual grading.</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'matching') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Match Pairs</h3>
+            {question.matchPairs.length < 8 && (
+              <button type="button" onClick={addMatchPair} className="lms-btn lms-btn-secondary" style={{ padding: '4px 12px', fontSize: 13 }}>+ Add Pair</button>
+            )}
+          </div>
+          <div style={{ padding: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr 36px', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Premise</span>
+              <span></span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Response</span>
+              <span></span>
+            </div>
+            {question.matchPairs.map((pair, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr 36px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <input type="text" value={pair.left} onChange={e => handleMatchPairChange(i, 'left', e.target.value)} placeholder={`Item ${i + 1}`} className="lms-input" />
+                <span style={{ textAlign: 'center', color: 'var(--primary)', fontWeight: 600 }}>↔</span>
+                <input type="text" value={pair.right} onChange={e => handleMatchPairChange(i, 'right', e.target.value)} placeholder={`Match ${i + 1}`} className="lms-input" />
+                {question.matchPairs.length > 2 ? (
+                  <button type="button" onClick={() => removeMatchPair(i)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }} title="Remove">×</button>
+                ) : <span></span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'ordering') {
+      return (
+        <div className="lms-card" style={{ marginBottom: 16 }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Correct Order</h3>
+            {question.correctOrder.length < 10 && (
+              <button type="button" onClick={addOrderItem} className="lms-btn lms-btn-secondary" style={{ padding: '4px 12px', fontSize: 13 }}>+ Add Item</button>
+            )}
+          </div>
+          <div style={{ padding: 16 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>Enter items in the correct order. Students will see them shuffled.</p>
+            {question.correctOrder.map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>{i + 1}</span>
+                <input type="text" value={item} onChange={e => handleOrderItemChange(i, e.target.value)} placeholder={`Step ${i + 1}`} className="lms-input" style={{ flex: 1 }} />
+                {question.correctOrder.length > 2 && (
+                  <button type="button" onClick={() => removeOrderItem(i)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }} title="Remove">×</button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'image-based') {
+      return (
+        <>
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Question Image</h3>
+            </div>
+            <div style={{ padding: 16 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Image URL *</label>
+              <input type="url" name="imageUrl" value={question.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" className="lms-input" style={{ width: '100%' }} />
+              {question.imageUrl && (
+                <div style={{ marginTop: 12, textAlign: 'center', padding: 12, background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <img src={question.imageUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: 250, borderRadius: 4 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Answer Options (select one correct)</h3>
+              {question.options.length < 8 && (
+                <button type="button" onClick={addOption} className="lms-btn lms-btn-secondary" style={{ padding: '4px 12px', fontSize: 13 }}>+ Add</button>
+              )}
+            </div>
+            <div style={{ padding: 16 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>Add options for students to choose from. If no options, provide a text answer below.</p>
+              {question.options.map((opt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', borderRadius: 8, border: `1px solid ${opt.isCorrect ? '#22c55e' : 'var(--border)'}`, background: opt.isCorrect ? '#f0fdf4' : 'transparent' }}>
+                  <input type="radio" name="imgCorrectOpt" checked={opt.isCorrect} onChange={() => handleOptionChange(i, 'isCorrect', true)} style={{ accentColor: '#22c55e', width: 18, height: 18 }} />
+                  <span style={{ width: 24, color: 'var(--text-muted)', fontSize: 14, fontWeight: 600 }}>{String.fromCharCode(65 + i)}.</span>
+                  <input type="text" value={opt.text} onChange={e => handleOptionChange(i, 'text', e.target.value)} placeholder={`Option ${String.fromCharCode(65 + i)}`} className="lms-input" style={{ flex: 1 }} />
+                  {question.options.length > 2 && (
+                    <button type="button" onClick={() => removeOption(i)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }} title="Remove">×</button>
+                  )}
+                </div>
+              ))}
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--border)' }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Or: Text Answer (if no options)</label>
+                <input type="text" name="correctAnswer" value={question.correctAnswer} onChange={handleChange} placeholder="Expected text answer based on the image" className="lms-input" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    return null;
   };
 
   return (
-    <PageWrapper
+    <LMSLayout
+      pageTitle="Add Question"
       breadcrumbs={[
-        { name: 'Site Administration' },
-        { name: 'Quiz Administration', href: '/admin/exams' },
-        { name: 'Edit Quiz', href: `/admin/exams/${examId}` },
-        { name: 'Add Question' },
+        { label: 'Dashboard', href: '/admin/dashboard' },
+        { label: 'Exams', href: '/admin/exams' },
+        { label: 'Exam Detail', href: `/admin/exams/${examId}` },
+        { label: 'Add Question' },
       ]}
     >
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <button
-              onClick={() => router.push(`/admin/exams/${examId}`)}
-              className="flex items-center gap-1 text-primary-600 hover:underline text-sm mb-2"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back to Quiz
-            </button>
-            <h1 className="text-2xl font-bold text-gray-800">Add New Question</h1>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Question Type & Marks */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h2>Question Type</h2>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <form onSubmit={e => handleSubmit(e, false)}>
+          {/* Question Type Selector */}
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Question Type</h3>
             </div>
-            <div className="card-body grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Select
-                label="Question Type"
-                value={form.questionType}
-                onChange={(e) => updateForm('questionType', e.target.value as any)}
-              >
-                <option value="MCQ">Multiple Choice (Single Answer)</option>
-                <option value="MSQ">Multiple Choice (Multiple Answers)</option>
-                <option value="numerical">Numerical</option>
-                <option value="descriptive">Descriptive / Essay</option>
-              </Select>
-              <Input
-                label="Marks"
-                type="number"
-                min={1}
-                value={form.marks}
-                onChange={(e) => updateForm('marks', parseInt(e.target.value) || 1)}
-              />
-              <Select
-                label="Difficulty"
-                value={form.difficulty}
-                onChange={(e) => updateForm('difficulty', e.target.value as any)}
-              >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </Select>
-            </div>
-          </div>
-
-          {/* Question Text */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h2>Question Text</h2>
-            </div>
-            <div className="card-body space-y-4">
-              <Textarea
-                value={form.questionText}
-                onChange={(e) => updateForm('questionText', e.target.value)}
-                placeholder="Enter your question here..."
-                rows={4}
-                required
-              />
-              <div className="flex items-center gap-4">
-                <Input
-                  label="Image URL (optional)"
-                  value={form.imageUrl}
-                  onChange={(e) => updateForm('imageUrl', e.target.value)}
-                  placeholder="https://example.com/image.png"
-                  className="flex-1"
-                />
-                {form.imageUrl && (
-                  <img
-                    src={form.imageUrl}
-                    alt="Preview"
-                    className="w-20 h-20 object-cover rounded border"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                )}
-              </div>
-              <Input
-                label="Category (optional)"
-                value={form.category}
-                onChange={(e) => updateForm('category', e.target.value)}
-                placeholder="e.g., Algebra, Mechanics, Grammar"
-              />
-            </div>
-          </div>
-
-          {/* Options (for MCQ/MSQ) */}
-          {(form.questionType === 'MCQ' || form.questionType === 'MSQ') && (
-            <div className="card mb-4">
-              <div className="card-header flex items-center justify-between">
-                <h2>Answer Options</h2>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={addOption}
-                  leftIcon={<Plus className="w-4 h-4" />}
-                >
-                  Add Option
-                </Button>
-              </div>
-              <div className="card-body space-y-3">
-                <p className="text-sm text-gray-500 mb-2">
-                  {form.questionType === 'MCQ' 
-                    ? 'Select the single correct answer' 
-                    : 'Select all correct answers'}
-                </p>
-                {form.options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="flex items-center">
-                      {form.questionType === 'MCQ' ? (
-                        <input
-                          type="radio"
-                          name="correctOption"
-                          checked={option.isCorrect}
-                          onChange={() => updateOption(index, 'isCorrect', true)}
-                          className="w-4 h-4 text-green-500 border-gray-300 focus:ring-green-500"
-                        />
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={option.isCorrect}
-                          onChange={(e) => updateOption(index, 'isCorrect', e.target.checked)}
-                          className="w-4 h-4 text-green-500 border-gray-300 rounded focus:ring-green-500"
-                        />
-                      )}
-                    </div>
-                    <span className="text-gray-500 font-medium w-6">
-                      {String.fromCharCode(65 + index)}.
-                    </span>
-                    <Input
-                      value={option.text}
-                      onChange={(e) => updateOption(index, 'text', e.target.value)}
-                      placeholder={`Option ${String.fromCharCode(65 + index)}`}
-                      className="flex-1"
-                    />
-                    {form.options.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => removeOption(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+            <div style={{ padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+                {QUESTION_TYPES.map(qt => (
+                  <button key={qt.value} type="button" onClick={() => handleTypeChange(qt.value)}
+                    style={{ padding: '10px 8px', border: `2px solid ${question.questionType === qt.value ? 'var(--primary)' : 'var(--border)'}`, borderRadius: 8, background: question.questionType === qt.value ? 'var(--primary-light, #e8f0fe)' : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', fontSize: 13, fontWeight: question.questionType === qt.value ? 600 : 400 }}>
+                    <div style={{ fontSize: 18, marginBottom: 2 }}>{qt.icon}</div>
+                    {qt.label}
+                  </button>
                 ))}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Numerical Answer */}
-          {form.questionType === 'numerical' && (
-            <div className="card mb-4">
-              <div className="card-header">
-                <h2>Correct Answer</h2>
-              </div>
-              <div className="card-body">
-                <Input
-                  label="Correct Numerical Value"
-                  type="number"
-                  step="any"
-                  value={form.correctAnswer}
-                  onChange={(e) => updateForm('correctAnswer', e.target.value)}
-                  placeholder="Enter the correct numerical answer"
-                  required
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  Students must enter this exact value (or within tolerance if configured)
-                </p>
-              </div>
+          {/* Question Details */}
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Question Details</h3>
             </div>
-          )}
-
-          {/* Descriptive Note */}
-          {form.questionType === 'descriptive' && (
-            <div className="card mb-4">
-              <div className="card-body">
-                <div className="alert alert-info">
-                  <span>
-                    Descriptive questions require manual grading. Students will enter their answers in a text box.
-                  </span>
+            <div style={{ padding: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Difficulty</label>
+                  <select name="difficulty" value={question.difficulty} onChange={handleChange} className="lms-input" style={{ width: '100%' }} title="Difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Marks</label>
+                  <input type="number" name="marks" value={question.marks} onChange={handleChange} min="0" step="0.5" className="lms-input" style={{ width: '100%' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Negative Marks</label>
+                  <input type="number" name="negativeMarks" value={question.negativeMarks} onChange={handleChange} min="0" step="0.25" className="lms-input" style={{ width: '100%' }} />
                 </div>
               </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Question Text *</label>
+                <textarea name="questionText" value={question.questionText} onChange={handleChange} rows={4} className="lms-input" style={{ width: '100%' }} placeholder="Enter your question here..." />
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Answer Section */}
+          {renderAnswerSection()}
 
           {/* Explanation */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h2>Explanation (Optional)</h2>
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Explanation (Optional)</h3>
             </div>
-            <div className="card-body">
-              <Textarea
-                value={form.explanation}
-                onChange={(e) => updateForm('explanation', e.target.value)}
-                placeholder="Explain why the correct answer is correct. This will be shown to students during review if enabled."
-                rows={3}
-              />
+            <div style={{ padding: 16 }}>
+              <textarea name="explanation" value={question.explanation} onChange={handleChange} rows={3} className="lms-input" style={{ width: '100%' }} placeholder="Explain the correct answer..." />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="lms-card" style={{ marginBottom: 16 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Tags (Optional)</h3>
+            </div>
+            <div style={{ padding: 16 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} className="lms-input" style={{ flex: 1 }} placeholder="Add tags..." />
+                <button type="button" onClick={addTag} className="lms-btn lms-btn-secondary" style={{ padding: '6px 16px' }}>Add</button>
+              </div>
+              {question.tags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {question.tags.map(tag => (
+                    <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: 4, fontSize: 13, border: '1px solid var(--border)' }}>
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between mt-6">
-            <Checkbox
-              label="Add another question"
-              checked={addAnother}
-              onChange={(e) => setAddAnother(e.target.checked)}
-            />
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => router.push(`/admin/exams/${examId}`)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                leftIcon={<Save className="w-4 h-4" />}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Question'}
-              </Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, gap: 16, flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, cursor: 'pointer' }}>
+              <input type="checkbox" checked={addAnother} onChange={e => setAddAnother(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
+              Add another question after saving
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Link href={`/admin/exams/${examId}`} className="lms-btn lms-btn-secondary" style={{ padding: '8px 20px', textDecoration: 'none' }}>Cancel</Link>
+              <button type="button" onClick={(e) => handleSubmit(e as any, true)} disabled={loading} className="lms-btn lms-btn-secondary" style={{ padding: '8px 20px' }}>{loading ? 'Saving...' : 'Save & Add Another'}</button>
+              <button type="submit" disabled={loading} className="lms-btn lms-btn-primary" style={{ padding: '8px 20px' }}>{loading ? 'Saving...' : 'Save Question'}</button>
             </div>
           </div>
         </form>
       </div>
-    </PageWrapper>
+    </LMSLayout>
   );
 }

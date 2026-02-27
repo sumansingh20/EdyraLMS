@@ -377,12 +377,12 @@ export const examSessionController = {
   async saveAnswer(req, res, next) {
     try {
       const { sessionToken } = req.params;
-      const { questionId, selectedOption, textAnswer } = req.body;
+      const { questionId, selectedOption, selectedOptions, textAnswer } = req.body;
       const ipAddress = req.ip || req.connection.remoteAddress;
       const fingerprint = req.headers['x-browser-fingerprint'];
-      
+
       const validation = await ExamSession.validateSession(sessionToken, ipAddress, fingerprint);
-      
+
       if (!validation.valid) {
         return res.status(403).json({
           success: false,
@@ -390,9 +390,9 @@ export const examSessionController = {
           terminated: true,
         });
       }
-      
+
       const session = validation.session;
-      
+
       // Check if time expired
       if (session.isExpired()) {
         await session.forceSubmit('time_expired', ipAddress);
@@ -402,8 +402,8 @@ export const examSessionController = {
           terminated: true,
         });
       }
-      
-      await session.saveAnswer(questionId, { selectedOption, textAnswer }, ipAddress);
+
+      await session.saveAnswer(questionId, { selectedOption, selectedOptions, textAnswer }, ipAddress);
       
       res.json({
         success: true,
@@ -504,11 +504,31 @@ export const examSessionController = {
           if (!q) continue;
           totalMarks += q.marks || 1;
           
-          if (q.questionType === 'mcq-single' || q.questionType === 'mcq-multiple' || q.questionType === 'true-false') {
+          if (q.questionType === 'mcq-single' || q.questionType === 'true-false') {
             if (ans.selectedOption !== undefined && ans.selectedOption !== null) {
               const correctOptionIds = (q.correctOptions || []).map(id => id.toString());
               const selectedOptionObj = q.options[ans.selectedOption];
               if (selectedOptionObj && correctOptionIds.includes(selectedOptionObj._id.toString())) {
+                score += q.marks || 1;
+                correctCount++;
+              } else {
+                wrongCount++;
+              }
+            }
+          } else if (q.questionType === 'mcq-multiple') {
+            // For multiple-select: check selectedOptions array, fallback to selectedOption
+            const correctOptionIds = (q.correctOptions || []).map(id => id.toString());
+            const selIndices = (ans.selectedOptions && ans.selectedOptions.length > 0)
+              ? ans.selectedOptions
+              : (ans.selectedOption !== undefined && ans.selectedOption !== null ? [ans.selectedOption] : []);
+            if (selIndices.length > 0) {
+              const selectedIds = selIndices
+                .map(idx => q.options[idx]?._id?.toString())
+                .filter(Boolean);
+              const allCorrect = selectedIds.length === correctOptionIds.length
+                && selectedIds.every(id => correctOptionIds.includes(id))
+                && correctOptionIds.every(id => selectedIds.includes(id));
+              if (allCorrect) {
                 score += q.marks || 1;
                 correctCount++;
               } else {

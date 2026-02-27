@@ -137,7 +137,7 @@ export default function CreateQuestionPage() {
   const handleOptionChange = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
     const newOptions = [...question.options];
     if (field === 'isCorrect') {
-      if (question.questionType === 'mcq-single' || question.questionType === 'true-false') {
+      if (question.questionType === 'mcq-single' || question.questionType === 'true-false' || question.questionType === 'image-based') {
         newOptions.forEach((o, i) => { o.isCorrect = i === index; });
       } else {
         newOptions[index].isCorrect = value as boolean;
@@ -228,6 +228,11 @@ export default function CreateQuestionPage() {
       const valid = question.correctOrder.filter(s => s.trim());
       if (valid.length < 2) return 'At least 2 items required for ordering';
     }
+    if (type === 'image-based') {
+      if (!question.imageUrl.trim()) return 'Image URL is required for image-based questions';
+      const filled = question.options.filter(o => o.text.trim());
+      if (filled.length >= 2 && !filled.some(o => o.isCorrect)) return 'Select the correct answer option';
+    }
     return null;
   };
 
@@ -257,7 +262,16 @@ export default function CreateQuestionPage() {
     if (type === 'long-answer' || type === 'code') base.correctAnswer = question.correctAnswer || null;
     if (type === 'matching') base.matchPairs = question.matchPairs.filter(p => p.left.trim() && p.right.trim());
     if (type === 'ordering') base.correctOrder = question.correctOrder.filter(s => s.trim());
-    if (type === 'image-based') { base.imageUrl = question.imageUrl; base.correctAnswer = question.correctAnswer; }
+    if (type === 'image-based') {
+      base.imageUrl = question.imageUrl;
+      const filled = question.options.filter(o => o.text.trim());
+      if (filled.length >= 2) {
+        base.options = filled.map(o => ({ text: o.text }));
+        base.correctOptions = filled.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0);
+      } else {
+        base.correctAnswer = question.correctAnswer;
+      }
+    }
     return base;
   };
 
@@ -438,24 +452,47 @@ export default function CreateQuestionPage() {
 
     if (type === 'image-based') {
       return (
-        <div className="lms-card" style={{ marginBottom: '16px' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-            <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Image &amp; Answer</h3>
-          </div>
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px' }}>Image URL</label>
-              <input type="url" name="imageUrl" value={question.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" className="lms-input" style={{ width: '100%' }} />
+        <>
+          <div className="lms-card" style={{ marginBottom: '16px' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Question Image</h3>
             </div>
-            {question.imageUrl && (
-              <div style={{ marginBottom: '12px', textAlign: 'center' }}>
-                <img src={question.imageUrl} alt="Preview" style={{ maxWidth: '300px', maxHeight: '200px', borderRadius: '8px', border: '1px solid var(--border)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              </div>
-            )}
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px' }}>Expected Answer</label>
-            <input type="text" name="correctAnswer" value={question.correctAnswer} onChange={handleChange} placeholder="Expected answer based on the image" className="lms-input" style={{ width: '100%' }} />
+            <div style={{ padding: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px' }}>Image URL *</label>
+              <input type="url" name="imageUrl" value={question.imageUrl} onChange={handleChange} placeholder="https://example.com/image.png" className="lms-input" style={{ width: '100%' }} />
+              {question.imageUrl && (
+                <div style={{ marginTop: '12px', textAlign: 'center', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <img src={question.imageUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '4px' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+          <div className="lms-card" style={{ marginBottom: '16px' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontWeight: 600, color: 'var(--primary)' }}>Answer Options (select one correct)</h3>
+              {question.options.length < 8 && (
+                <button type="button" onClick={addOption} className="lms-btn lms-btn-secondary" style={{ padding: '4px 12px', fontSize: '13px' }}>+ Add</button>
+              )}
+            </div>
+            <div style={{ padding: '16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>Add options for students to choose from, or provide a text answer below.</p>
+              {question.options.map((opt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${opt.isCorrect ? '#22c55e' : 'var(--border)'}`, background: opt.isCorrect ? '#f0fdf4' : 'transparent' }}>
+                  <input type="radio" name="imgCorrectOpt" checked={opt.isCorrect} onChange={() => handleOptionChange(i, 'isCorrect', true)} style={{ accentColor: '#22c55e', width: '18px', height: '18px' }} />
+                  <span style={{ width: '24px', color: 'var(--text-muted)', fontSize: '14px', fontWeight: 600 }}>{String.fromCharCode(65 + i)}.</span>
+                  <input type="text" value={opt.text} onChange={e => handleOptionChange(i, 'text', e.target.value)} placeholder={`Option ${String.fromCharCode(65 + i)}`} className="lms-input" style={{ flex: 1 }} />
+                  {question.options.length > 2 && (
+                    <button type="button" onClick={() => removeOption(i)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }} title="Remove">×</button>
+                  )}
+                </div>
+              ))}
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed var(--border)' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '4px' }}>Or: Text Answer (if no options)</label>
+                <input type="text" name="correctAnswer" value={question.correctAnswer} onChange={handleChange} placeholder="Expected text answer based on the image" className="lms-input" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
+        </>
       );
     }
 

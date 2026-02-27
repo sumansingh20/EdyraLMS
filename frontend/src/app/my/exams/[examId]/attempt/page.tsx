@@ -16,16 +16,23 @@ interface Question {
   _id: string;
   questionNumber: number;
   questionText: string;
-  questionType: 'mcq-single' | 'mcq-multiple' | 'true-false';
+  questionType: 'mcq-single' | 'mcq-multiple' | 'true-false' | 'fill-blank' | 'short-answer' | 'numerical' | 'long-answer' | 'matching' | 'ordering' | 'image-based' | 'code';
   options: QuestionOption[];
   imageUrl?: string;
   marks: number;
   negativeMarks: number;
   section?: string;
+  matchPairs?: { left: string; right: string }[];
+  orderItems?: string[];
+  codeLanguage?: string;
+  answerTolerance?: number;
 }
 
 interface Answer {
   selectedOptions: string[];
+  textAnswer?: string;
+  matchAnswers?: string[];
+  orderAnswer?: string[];
   markedForReview: boolean;
   visited: boolean;
 }
@@ -388,6 +395,7 @@ export default function SecureExamAttemptPage() {
       const arr = Array.from(currentAnswers.entries()).map(([qId, a]) => ({
         questionId: qId,
         selectedOptions: a.selectedOptions,
+        textAnswer: a.textAnswer,
         markedForReview: a.markedForReview,
         visited: a.visited,
       }));
@@ -457,10 +465,43 @@ export default function SecureExamAttemptPage() {
     answersRef.current = updated;
   };
 
+  const handleTextAnswer = (text: string) => {
+    const q = questions[currentIdx];
+    const cur = answers.get(q._id) || { selectedOptions: [], markedForReview: false, visited: true };
+    const updated = new Map(answers);
+    updated.set(q._id, { ...cur, textAnswer: text, visited: true });
+    setAnswers(updated);
+    answersRef.current = updated;
+  };
+
+  const handleMatchAnswer = (pairIndex: number, value: string) => {
+    const q = questions[currentIdx];
+    const cur = answers.get(q._id) || { selectedOptions: [], markedForReview: false, visited: true };
+    const matchAnswers = [...(cur.matchAnswers || [])];
+    while (matchAnswers.length <= pairIndex) matchAnswers.push('');
+    matchAnswers[pairIndex] = value;
+    const updated = new Map(answers);
+    updated.set(q._id, { ...cur, matchAnswers, textAnswer: JSON.stringify(matchAnswers), visited: true });
+    setAnswers(updated);
+    answersRef.current = updated;
+  };
+
+  const handleOrderAnswer = (fromIndex: number, toIndex: number) => {
+    const q = questions[currentIdx];
+    const cur = answers.get(q._id) || { selectedOptions: [], markedForReview: false, visited: true };
+    const orderAnswer = [...(cur.orderAnswer || q.orderItems || [])];
+    const [item] = orderAnswer.splice(fromIndex, 1);
+    orderAnswer.splice(toIndex, 0, item);
+    const updated = new Map(answers);
+    updated.set(q._id, { ...cur, orderAnswer, textAnswer: JSON.stringify(orderAnswer), visited: true });
+    setAnswers(updated);
+    answersRef.current = updated;
+  };
+
   const clearResponse = () => {
     const q = questions[currentIdx];
     const updated = new Map(answers);
-    updated.set(q._id, { selectedOptions: [], markedForReview: false, visited: true });
+    updated.set(q._id, { selectedOptions: [], textAnswer: '', matchAnswers: [], orderAnswer: [], markedForReview: false, visited: true });
     setAnswers(updated);
     answersRef.current = updated;
   };
@@ -537,16 +578,27 @@ export default function SecureExamAttemptPage() {
     let answered = 0, flagged = 0;
     questions.forEach(q => {
       const a = answers.get(q._id);
-      if (a?.selectedOptions?.length) answered++;
+      if (a?.selectedOptions?.length || (a?.textAnswer && a.textAnswer.trim())) answered++;
       if (a?.markedForReview) flagged++;
     });
     return { answered, flagged, unanswered: questions.length - answered, total: questions.length };
   };
 
   const getQuestionLabel = (q: Question) => {
-    if (q.questionType === 'mcq-multiple') return 'Select all that apply';
-    if (q.questionType === 'true-false') return 'Select True or False';
-    return 'Select one answer';
+    const labels: Record<string, string> = {
+      'mcq-single': 'Select one answer',
+      'mcq-multiple': 'Select all that apply',
+      'true-false': 'Select True or False',
+      'fill-blank': 'Fill in the blank',
+      'short-answer': 'Type your answer',
+      'numerical': 'Enter a numerical answer',
+      'long-answer': 'Write a detailed answer',
+      'matching': 'Match each item on the left with the right',
+      'ordering': 'Arrange items in the correct order',
+      'image-based': q.options?.length > 0 ? 'Select one answer' : 'Type your answer',
+      'code': `Write your code${q.codeLanguage ? ` (${q.codeLanguage})` : ''}`,
+    };
+    return labels[q.questionType] || 'Answer the question';
   };
 
   /* ═══════════════════════════════════════════════
@@ -776,7 +828,7 @@ export default function SecureExamAttemptPage() {
             <div className="proctor-nav-grid">
               {questions.map((qq, idx) => {
                 const a = answers.get(qq._id);
-                const isAns = !!a?.selectedOptions?.length;
+                const isAns = !!(a?.selectedOptions?.length || (a?.textAnswer && a.textAnswer.trim()));
                 const isFlag = !!a?.markedForReview;
                 const isCur = idx === currentIdx;
                 let cls = 'proctor-nav-btn';
@@ -832,31 +884,161 @@ export default function SecureExamAttemptPage() {
             <div className="proctor-q-instruction">{getQuestionLabel(q)}</div>
 
             <div className="proctor-options">
-              {q.options.map((opt, oi) => {
-                const letter = String.fromCharCode(65 + oi);
-                const isSelected = ans?.selectedOptions?.includes(opt._id);
-                const inputType = q.questionType === 'mcq-multiple' ? 'checkbox' : 'radio';
+              {/* MCQ Single / True-False / Image-based with options */}
+              {(['mcq-single', 'true-false', 'image-based'].includes(q.questionType) && q.options && q.options.length > 0) && (
+                <>
+                  {q.options.map((opt, oi) => {
+                    const letter = String.fromCharCode(65 + oi);
+                    const isSelected = ans?.selectedOptions?.includes(opt._id);
+                    return (
+                      <label key={opt._id} className={`proctor-option ${isSelected ? 'selected' : ''}`} htmlFor={`opt-${opt._id}`}>
+                        <input type="radio" id={`opt-${opt._id}`} name={`q-${q._id}`} checked={!!isSelected} onChange={() => handleSelectOption(opt._id)} />
+                        <span className="proctor-option-marker radio">{isSelected ? '\u25CF' : letter}</span>
+                        <span className="proctor-option-text">{opt.text}</span>
+                      </label>
+                    );
+                  })}
+                </>
+              )}
 
-                return (
-                  <label
-                    key={opt._id}
-                    className={`proctor-option ${isSelected ? 'selected' : ''}`}
-                    htmlFor={`opt-${opt._id}`}
-                  >
-                    <input
-                      type={inputType}
-                      id={`opt-${opt._id}`}
-                      name={`q-${q._id}`}
-                      checked={!!isSelected}
-                      onChange={() => handleSelectOption(opt._id)}
-                    />
-                    <span className={`proctor-option-marker ${inputType}`}>
-                      {isSelected ? (inputType === 'checkbox' ? '✓' : '●') : letter}
-                    </span>
-                    <span className="proctor-option-text">{opt.text}</span>
-                  </label>
-                );
-              })}
+              {/* MCQ Multiple */}
+              {q.questionType === 'mcq-multiple' && q.options && (
+                <>
+                  {q.options.map((opt, oi) => {
+                    const letter = String.fromCharCode(65 + oi);
+                    const isSelected = ans?.selectedOptions?.includes(opt._id);
+                    return (
+                      <label key={opt._id} className={`proctor-option ${isSelected ? 'selected' : ''}`} htmlFor={`opt-${opt._id}`}>
+                        <input type="checkbox" id={`opt-${opt._id}`} name={`q-${q._id}`} checked={!!isSelected} onChange={() => handleSelectOption(opt._id)} />
+                        <span className="proctor-option-marker checkbox">{isSelected ? '\u2713' : letter}</span>
+                        <span className="proctor-option-text">{opt.text}</span>
+                      </label>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Fill in the Blank / Short Answer */}
+              {(['fill-blank', 'short-answer'].includes(q.questionType)) && (
+                <input
+                  type="text"
+                  value={ans?.textAnswer || ''}
+                  onChange={(e) => handleTextAnswer(e.target.value)}
+                  className="proctor-text-input"
+                  placeholder={q.questionType === 'fill-blank' ? 'Fill in the blank...' : 'Type your answer...'}
+                  style={{ width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid #374151', borderRadius: 8, background: '#1a1a2e', color: '#e2e8f0', outline: 'none' }}
+                />
+              )}
+
+              {/* Numerical */}
+              {q.questionType === 'numerical' && (
+                <div>
+                  <input
+                    type="number"
+                    step="any"
+                    value={ans?.textAnswer || ''}
+                    onChange={(e) => handleTextAnswer(e.target.value)}
+                    className="proctor-text-input"
+                    placeholder="Enter numerical answer..."
+                    style={{ width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid #374151', borderRadius: 8, background: '#1a1a2e', color: '#e2e8f0', outline: 'none' }}
+                  />
+                  {q.answerTolerance && (
+                    <p style={{ marginTop: 8, fontSize: 13, color: '#94a3b8' }}>Tolerance: +/- {q.answerTolerance}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Long Answer / Essay */}
+              {q.questionType === 'long-answer' && (
+                <textarea
+                  value={ans?.textAnswer || ''}
+                  onChange={(e) => handleTextAnswer(e.target.value)}
+                  rows={8}
+                  placeholder="Write your detailed answer here..."
+                  style={{ width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid #374151', borderRadius: 8, background: '#1a1a2e', color: '#e2e8f0', outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                />
+              )}
+
+              {/* Code */}
+              {q.questionType === 'code' && (
+                <div>
+                  {q.codeLanguage && (
+                    <div style={{ marginBottom: 8, fontSize: 13, color: '#94a3b8', background: '#0f172a', padding: '6px 12px', borderRadius: '6px 6px 0 0', display: 'inline-block' }}>
+                      Language: {q.codeLanguage}
+                    </div>
+                  )}
+                  <textarea
+                    value={ans?.textAnswer || ''}
+                    onChange={(e) => handleTextAnswer(e.target.value)}
+                    rows={12}
+                    placeholder="Write your code here..."
+                    style={{ width: '100%', padding: '12px 16px', fontSize: 14, border: '2px solid #374151', borderRadius: q.codeLanguage ? '0 8px 8px 8px' : 8, background: '#0f172a', color: '#e2e8f0', outline: 'none', resize: 'vertical', fontFamily: 'monospace', lineHeight: 1.5, tabSize: 4 }}
+                  />
+                </div>
+              )}
+
+              {/* Image-based without MCQ options (text answer) */}
+              {q.questionType === 'image-based' && (!q.options || q.options.length === 0) && (
+                <input
+                  type="text"
+                  value={ans?.textAnswer || ''}
+                  onChange={(e) => handleTextAnswer(e.target.value)}
+                  className="proctor-text-input"
+                  placeholder="Type your answer based on the image..."
+                  style={{ width: '100%', padding: '12px 16px', fontSize: 15, border: '2px solid #374151', borderRadius: 8, background: '#1a1a2e', color: '#e2e8f0', outline: 'none' }}
+                />
+              )}
+
+              {/* Matching */}
+              {q.questionType === 'matching' && q.matchPairs && (
+                <div>
+                  {q.matchPairs.map((pair, pi) => {
+                    const rightOptions = q.matchPairs!.map(p => p.right);
+                    return (
+                      <div key={pi} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                        <span style={{ flex: 1, fontWeight: 500, color: '#e2e8f0' }}>{pair.left}</span>
+                        <span style={{ color: '#6366f1', fontWeight: 700, fontSize: 18 }}>&rarr;</span>
+                        <select
+                          value={ans?.matchAnswers?.[pi] || ''}
+                          onChange={(e) => handleMatchAnswer(pi, e.target.value)}
+                          style={{ flex: 1, padding: '8px 12px', border: '2px solid #374151', borderRadius: 6, background: '#1a1a2e', color: '#e2e8f0', fontSize: 14, outline: 'none' }}
+                        >
+                          <option value="">Select match...</option>
+                          {rightOptions.map((r, ri) => (
+                            <option key={ri} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Ordering */}
+              {q.questionType === 'ordering' && (q.orderItems || ans?.orderAnswer) && (
+                <div>
+                  {(ans?.orderAnswer || q.orderItems || []).map((item: string, idx: number) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
+                      <span style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#6366f1', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{idx + 1}</span>
+                      <span style={{ flex: 1, color: '#e2e8f0', fontSize: 14 }}>{item}</span>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => handleOrderAnswer(idx, idx - 1)}
+                          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, border: '1px solid #374151', background: idx === 0 ? 'transparent' : '#374151', color: idx === 0 ? '#4b5563' : '#e2e8f0', cursor: idx === 0 ? 'default' : 'pointer', fontSize: 14 }}
+                        >&uarr;</button>
+                        <button
+                          type="button"
+                          disabled={idx === (ans?.orderAnswer || q.orderItems || []).length - 1}
+                          onClick={() => handleOrderAnswer(idx, idx + 1)}
+                          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, border: '1px solid #374151', background: idx === (ans?.orderAnswer || q.orderItems || []).length - 1 ? 'transparent' : '#374151', color: idx === (ans?.orderAnswer || q.orderItems || []).length - 1 ? '#4b5563' : '#e2e8f0', cursor: idx === (ans?.orderAnswer || q.orderItems || []).length - 1 ? 'default' : 'pointer', fontSize: 14 }}
+                        >&darr;</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

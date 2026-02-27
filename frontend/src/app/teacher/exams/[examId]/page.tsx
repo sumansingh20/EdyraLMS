@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 interface Question {
   _id: string;
   questionText: string;
-  questionType: 'mcq-single' | 'mcq-multiple' | 'true-false';
+  questionType: string;
   marks: number;
   options?: { text: string; isCorrect: boolean }[];
 }
