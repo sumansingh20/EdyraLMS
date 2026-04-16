@@ -1,0 +1,66 @@
+services:
+  moodle-db:
+    image: bitnami/mariadb:11.4
+    container_name: moodlesecurity-moodle-db
+    restart: unless-stopped
+    environment:
+      ALLOW_EMPTY_PASSWORD: "no"
+      MARIADB_ROOT_PASSWORD: ${MOODLE_DB_ROOT_PASSWORD:-change_this_root_password}
+      MARIADB_USER: ${MOODLE_DB_USER:-bn_moodle}
+      MARIADB_PASSWORD: ${MOODLE_DB_PASSWORD:-change_this_db_password}
+      MARIADB_DATABASE: ${MOODLE_DB_NAME:-bitnami_moodle}
+    volumes:
+      - moodle_db_data:/bitnami/mariadb
+    networks:
+      - moodle-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MOODLE_DB_ROOT_PASSWORD:-change_this_root_password}"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  moodle:
+    image: bitnami/moodle:4.5
+    container_name: moodlesecurity-moodle
+    restart: unless-stopped
+    depends_on:
+      moodle-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${MOODLE_HTTP_PORT:-8080}:8080"
+    environment:
+      MOODLE_DATABASE_TYPE: mariadb
+      MOODLE_DATABASE_HOST: moodle-db
+      MOODLE_DATABASE_PORT_NUMBER: "3306"
+      MOODLE_DATABASE_USER: ${MOODLE_DB_USER:-bn_moodle}
+      MOODLE_DATABASE_PASSWORD: ${MOODLE_DB_PASSWORD:-change_this_db_password}
+      MOODLE_DATABASE_NAME: ${MOODLE_DB_NAME:-bitnami_moodle}
+      MOODLE_USERNAME: ${MOODLE_ADMIN_USER:-admin}
+      MOODLE_PASSWORD: ${MOODLE_ADMIN_PASSWORD:-change_this_admin_password}
+      MOODLE_EMAIL: ${MOODLE_ADMIN_EMAIL:-admin@example.com}
+      MOODLE_SITE_NAME: ${MOODLE_SITE_NAME:-CET Moodle}
+      MOODLE_HOST: ${MOODLE_HOST:-cet.iitp.ac.in}
+      MOODLE_SKIP_BOOTSTRAP: ${MOODLE_SKIP_BOOTSTRAP:-no}
+      BITNAMI_DEBUG: ${BITNAMI_DEBUG:-false}
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodle_moodledata:/bitnami/moodledata
+    networks:
+      - moodle-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  moodle_db_data:
+    driver: local
+  moodle_data:
+    driver: local
+  moodle_moodledata:
+    driver: local
+
+networks:
+  moodle-network:
+    driver: bridge
